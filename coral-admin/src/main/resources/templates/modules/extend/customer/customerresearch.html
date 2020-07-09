@@ -1,0 +1,632 @@
+﻿<!DOCTYPE html>
+<html lang="zh-cn" class="fullscreen-bg" xmlns:th="http://www.thymeleaf.org"
+      xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<head th:replace="common/links :: common_header(~{::title},~{},~{})">
+    <title>客户管理-模块</title>
+</head>
+<style>
+    .layui-layer-page{
+        height: 500px;
+        overflow:auto
+    }
+</style>
+<body>
+<!-- 页面加载loading -->
+<div class="page-loading">
+    <div class="ball-loader">
+        <span></span><span></span><span></span><span></span>
+    </div>
+</div>
+<!-- 正文开始 -->
+<div class="layui-fluid">
+    <div class="layui-card">
+        <div class="layui-card-body">
+            <!-- 表格工具栏 -->
+            <form class="layui-form toolbar">
+                <div class="layui-form-item">
+                    <div class="layui-inline">
+                        <label class="layui-form-label">企业名称</label>
+                        <div class="layui-input-inline">
+                            <input name="corporateName" class="layui-input" placeholder="请输入"/>
+                        </div>
+                    </div>
+
+                    <div class="layui-inline">
+                        <label class="layui-form-label">法人名称</label>
+                        <div class="layui-input-inline">
+                            <input name="corporationName" class="layui-input" placeholder="请输入法人名称"/>
+                        </div>
+                    </div>
+
+                    <div class="layui-inline">
+                        <label class="layui-form-label" style="width: 125px;">统一信用码</label>
+                        <div class="layui-input-inline">
+                            <input name="corporateId" class="layui-input" placeholder="请输入"/>
+                        </div>
+                    </div>
+                    <div class="layui-inline">&emsp;
+                        <button class="layui-btn icon-btn sous" lay-filter="searchBtn" lay-submit>
+                            <i class="layui-icon">&#xe615;</i>搜索
+                        </button>&nbsp;
+                        <button shiro:hasPermission="customerResearch:export" id="exportBtn" class="layui-btn icon-btn"
+                                type="button">
+                            <i class="layui-icon">&#xe67d;</i>导出
+                        </button>
+                    </div>
+                </div>
+            </form>
+            <!-- 数据表格 -->
+            <table id="dataTable" lay-filter="dataTable"></table>
+        </div>
+    </div>
+</div>
+
+<!-- 表格操作列 -->
+<script type="text/html" id="tableBar">
+    <a shiro:hasPermission="customerResearch:update" class="layui-btn layui-btn-primary layui-btn-xs" lay-event="edit">修改</a>
+    <a shiro:hasPermission="customerResearch:delete" class="layui-btn layui-btn-danger layui-btn-xs"
+       lay-event="del">删除</a>
+
+</script>
+
+<!-- 表单弹窗 -->
+<script type="text/html" id="formDialog">
+    <form id="dataForm" lay-filter="dataForm" onkeydown="if(event.keyCode==13){return false}" class="layui-form model-form" style="width: 90%;height: 90%;left: 20px;">
+        <input name="id" type="hidden"/>
+        <div class="layui-form-item" style="display: inline-block;width: 32%;">
+            <label class="layui-form-label layui-form-required">企业名称</label>
+            <div class="layui-input-block">
+                <input name="corporateName" placeholder="请输入企业全称" class="layui-input"
+                       lay-verType="tips" lay-verify="required" required/>
+            </div>
+        </div>
+        <div class="layui-form-item" style="display: inline-block;width: 32%;">
+            <label class="layui-form-label">社会统一信用码</label>
+            <div class="layui-input-block">
+                <input name="corporateId" placeholder="请输入统一信用码" class="layui-input"
+                       lay-verType="tips"/>
+            </div>
+        </div>
+        <div class="layui-form-item" style="display: inline-block;width: 32%;">
+            <label class="layui-form-label">法人</label>
+            <div class="layui-input-block">
+                <input name="corporationName" placeholder="请输入法人名称" class="layui-input"
+                       lay-verType="tips" />
+            </div>
+        </div>
+        <div class="layui-form-item" style="display: inline-block;width: 32%;">
+            <label class="layui-form-label ">电话号码</label>
+            <div class="layui-input-block">
+                <input name="phone" placeholder="请输入法人电话号码" class="layui-input"
+                       lay-verType="tips" />
+            </div>
+        </div>
+        <div class="layui-form-item" style="display: inline-block;width: 32%;">
+            <label class="layui-form-label ">负责人</label>
+            <div class="layui-input-block">
+                <input name="personCharge" placeholder="请输入负责人名称" class="layui-input"
+                       lay-verType="tips"/>
+            </div>
+        </div>
+        <div class="layui-form-item" style="display: inline-block;width: 32%;">
+            <label class="layui-form-label ">电话号码</label>
+            <div class="layui-input-block">
+                <input name="phone2" placeholder="请输入负责人号码" class="layui-input"
+                       lay-verType="tips"/>
+            </div>
+        </div>
+
+        <div class="layui-form-item" style="display: inline-block;width: 32%;">
+            <label class="layui-form-label">申报类型</label>
+            <div class="layui-input-block">
+                <select name="declareType" class="layui-select"
+                        lay-verType="tips" >
+                    <option value="">请选择申报类型</option>
+                    <option value="0">零申报</option>
+                    <option value="1">非零申报</option>
+                </select>
+            </div>
+        </div>
+        <div class="layui-form-item" style="display: inline-block;width: 32%;">
+            <label class="layui-form-label ">纳税性质</label>
+            <div class="layui-input-block">
+                <select name="payTaxProperties" class="layui-select"
+                        lay-verType="tips" >
+                    <option value="">请选择纳税性质</option>
+                    <option value="0">小规模</option>
+                    <option value="1">一般纳税人</option>
+                    <option value="2">个体</option>
+                    <option value="3">个体一般纳税人</option>
+                </select>
+            </div>
+        </div>
+        <div class="layui-form-item" style="display: inline-block;width: 32%;">
+            <label class="layui-form-label ">公司地址</label>
+            <div class="layui-input-block">
+                <input name="address" placeholder="请输入公司注册地址" class="layui-input"
+                       lay-verType="tips" />
+            </div>
+        </div>
+
+        <div class="layui-form-item" style="display: inline-block;width: 32%;">
+            <label class="layui-form-label " style="padding: 9px 0;width:25%;">有无实体地址</label>
+            <div class="layui-input-block">
+                <select name="isAddres" onchange="gaibian(this)" class="layui-input"
+                        lay-verType="tips" >
+                    <option value="">是否有无实体地址</option>
+                    <option value="0">无</option>
+                    <option value="1">有</option>
+                </select>
+            </div>
+        </div>
+        <div class="layui-form-item" style="display: inline-block;width: 32%;">
+            <label class="layui-form-label ">主营业务</label>
+            <div class="layui-input-block">
+                <input name="mainBusiness" placeholder="请输入主营业务" class="layui-input"
+                       lay-verType="tips" />
+            </div>
+        </div>
+        <div class="layui-form-item" style="display: inline-block;width: 32%;">
+            <label class="layui-form-label">税盘信息</label>
+            <div class="layui-input-block">
+                <input name="taxInfo" placeholder="请直接输入税盘包含信息例  账号:123456、密码:123456、口令:123456等其他信息" class="layui-input"
+                       lay-verType="tips"/>
+            </div>
+        </div>
+        <div class="layui-form-item addres_detail" style="width: 32%;display: inline-block;">
+            <label class="layui-form-label ">具体地址</label>
+            <div class="layui-input-block">
+                <input name="addresDetail" placeholder="请输入具体地址" class="layui-input"
+                       lay-verType="tips"/>
+            </div>
+        </div>
+
+
+        <div class="layui-form-item" style="display: inline-block;width: 32%;">
+            <label class="layui-form-label ">客户来源</label>
+            <div class="layui-input-block">
+                <input name="script" placeholder="请输入客户来源" class="layui-input"
+                       lay-verType="tips" />
+            </div>
+        </div>
+        <div class="layui-form-item" style="display: inline-block;width: 97%;">
+            <label class="layui-form-label " style="padding: 9px 0;width:8%;">客户附件上传</label>
+            <div class="layui-input-block">
+                <div class="layui-upload">
+                    <div class="layui-input-block fujianBx" style="margin-left: 0;margin-bottom: 10px;">
+                        <button type="button" class="layui-btn layui-btn-normal testList" iflag="yyzz">营业执照</button>
+                        <button type="button" class="layui-btn layui-btn-normal testList" iflag="sfzzm">法人身份证复印件正反面</button>
+                        <!--<button type="button" class="layui-btn layui-btn-normal testList" iflag="sfzfm">法人身份证复印件反面</button>-->
+                        <button type="button" class="layui-btn layui-btn-normal testList" iflag="qyht">签约合同扫描件</button>
+                    </div>
+                    <div class="layui-input-block fujianBx" style="margin-left: 0;">
+                        <button type="button" class="layui-btn layui-btn-normal testList" iflag="fcz">房产证</button>
+                        <button type="button" class="layui-btn layui-btn-normal testList" iflag="zlht">租赁合同</button>
+                        <button type="button" class="layui-btn layui-btn-normal testList" iflag="fdsfz">房东身份证复印件</button>
+                    </div>
+                    <div class="layui-upload-list">
+                        <table class="layui-table">
+                            <thead>
+                            <tr>
+                                <th>文件名</th>
+                                <th>状态</th>
+                                <th>操作</th>
+                            </tr>
+                            </thead>
+                            <tbody id="demoList"></tbody>
+                        </table>
+                    </div>
+                    <button type="button" class="layui-btn" style="display: none;" id="testListAction">开始上传</button>
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item text-right">
+            <button class="layui-btn" lay-filter="saveBtn" lay-submit>保存</button>
+            <button class="layui-btn layui-btn-primary" type="button" ew-event="closeDialog">取消</button>
+        </div>
+    </form>
+</script>
+<!-- js部分 -->
+<div th:replace="common/scripts :: common"></div>
+<div th:replace="common/scripts :: custom"></div>
+<div>
+    <script>
+        //全局变量 Shiro权限
+        var shiroSave = false;
+        var shiroDelete = false;
+        var shiroUpdate = false;
+        var shiroInfo = false;
+
+    </script>
+    <!-- 设置Shiro权限变量 -->
+    <shiro:hasAllPermissions name="customerResearch:save">
+        <script>shiroSave = true;</script>
+    </shiro:hasAllPermissions>
+    <shiro:hasAllPermissions name="customerResearch:delete">
+        <script>shiroDelete = true;</script>
+    </shiro:hasAllPermissions>
+    <shiro:hasAllPermissions name="customerResearch:update">
+        <script>shiroUpdate = true;</script>
+    </shiro:hasAllPermissions>
+
+</div>
+<script type="text/html" id="enclosure">
+    {{#if(d.enclosure === null){ }}
+    <img width="50" height="30"
+         src="https://portrait.gitee.com/uploads/avatars/user/890/2671379_gemteam_1586092629.png"/>
+    {{# }else{ }}
+    <a width="50" height="30" href="{{ d.enclosure }}">附件下载</a>
+    {{# } }}
+</script>
+
+<script>
+    layui.use(['layer', 'form', 'table', 'util', 'laydate', 'table', 'admin'], function () {
+        var $ = layui.jquery;
+        var layer = layui.layer;
+        var form = layui.form;
+        var table = layui.table;
+        var util = layui.util;
+        var laydate = layui.laydate;
+        var tableX = layui.table;
+        var admin = layui.admin;
+
+        var fujianList = new Array();
+        var yujianList = new Array();
+        var fuyinjList = new Array();
+        /* 渲染表格 */
+        var cols = [
+            {type: 'checkbox',fixed:true},
+            {title: '公司名称',templet: function (d) {
+                return "<a href='javascript:void(0);' onclick='toContract(\""+d.corporateName+"\")'>"+d.corporateName+"</a>"
+                }, align: 'center',width:190,fixed:true},
+            {field: 'corporateId', title: '社会统一信用码', align: 'center'},
+            {field: 'corporationName', title: '法人名称', align: 'center'},
+            {field: 'phone', title: '法人电话', align: 'center'},
+            {field: 'personCharge', title: '负责人名称', align: 'center'},
+            {field: 'phone2', title: '负责人电话', align: 'center'},
+            {field: 'address', title: '公司地址', align: 'center'},
+            {
+                title: '有无实体地址', templet: function (d) {
+                    var strs = [
+                        '<span class="layui-badge layui-badge-red">无</span>',
+                        '<span class="layui-badge layui-badge-green">有</span>'
+                    ];
+                    return d.isAddres == null ? "" :d.isAddres==""?"": strs[d.isAddres];
+                }, align: 'center'
+            },
+            {field: 'addresDetail', title: '具体地址', align: 'center'},
+            {field: 'mainBusiness', title: '主营业务', align: 'center'},
+            {title: '申报类型',templet: function (d) {
+                    var strs = [
+                        '<span class="layui-badge layui-badge-red">零申报</span>',
+                        '<span class="layui-badge layui-badge-green">非零申报</span>'
+                    ];
+                    return d.declareType == null ? "" :d.declareType == ""?"": strs[d.declareType];
+                }, align: 'center'},
+            { title: '纳税性质',templet: function (d) {
+                    var strs = [
+                        '<span class="layui-badge layui-badge-green">小规模</span>',
+                        '<span class="layui-badge layui-badge-blue">一般纳税人</span>',
+                        '<span class="layui-badge layui-badge-yellow">个体户</span>',
+                        '<span class="layui-badge layui-badge-pink">个体户一般纳税人</span>'
+                    ];
+                    return d.payTaxProperties==null?"":d.payTaxProperties==""?"":strs[d.payTaxProperties];
+                }, align: 'center'},
+            {field: 'taxInfo', title: '税盘信息', align: 'center'},
+            {field: 'script', title: '客户来源', align: 'center'},
+            {field: 'enclosure', title: '附件信息', align: 'center'},
+            {title: '操作', toolbar: '#tableBar', align: 'center', minWidth: 200}
+        ];
+
+
+            var cuFlag="1";
+        var customerId=null;
+        if(localStorage.getItem("customerId")!=null&&localStorage.getItem("customerId")!=undefined&&localStorage.getItem("customerId")!="undefined") {
+            cuFlag="2";
+            customerId=localStorage.getItem("customerId");
+            $("[name='corporateName']").val(customerId)
+            localStorage.removeItem("customerId");
+        }
+
+
+        var insTb = table.render({
+            elem: '#dataTable',
+            url: cuFlag=="2"?"customerResearch/page?corporateName="+customerId:'customerResearch/page',
+            page: true,
+            limit:50,
+            limits:[10,20,30,40,50,5000],
+            height:600,
+            toolbar: [shiroToolbar(shiroSave, shiroDelete)].join(''),
+            cellMinWidth: 100,
+            cols: [cols],
+            done: function () {
+                // 绑定鼠标右键
+                /*tableX.bindCtxMenu('dataTable', shiroBindCtxMenu(shiroDelete, shiroUpdate));*/
+            }
+        });
+
+
+        /* 渲染时间选择 */
+        laydate.render({
+            elem: 'input[name="dateRange"]',
+            type: 'date',
+            range: true,
+            trigger: 'click'
+        });
+
+
+        /* 表格工具条点击事件 */
+        table.on('tool(dataTable)', function (obj) {
+            cuFlag="1";
+            if (obj.event === 'edit') { // 修改
+                showEditModel(obj.data);
+            } else if (obj.event === 'del') { // 删除
+                doDel(obj.data);
+            } else if (obj.event === 'reset') { // 重置密码
+                resetPsw(obj);
+            }
+        });
+        /* 表格头工具栏点击事件 */
+        table.on('toolbar(dataTable)', function (obj) {
+            cuFlag="1";
+            if (obj.event === 'add') { // 添加
+                showEditModel();
+            } else if (obj.event === 'del') { // 删除
+                var checkRows = table.checkStatus('dataTable');
+                if (checkRows.data.length === 0) {
+                    layer.msg('请选择要删除的数据', {icon: 2});
+                    return;
+                }
+                var ids = checkRows.data.map(function (d) {
+                    return d.id;
+                });
+                doDel({ids: ids});
+            }
+        });
+
+
+        // 显示编辑弹窗
+        function showEditModel(mData) {
+            fujianList = new Array();
+            yujianList = new Array();
+            fuyinjList = new Array();
+            admin.open({
+                type: 1,
+                area: ['95%', '95%'],
+                offset: ['10px', '50px'],
+                title: (mData ? '修改客户资料' : '添加客户资料'),
+                content: $('#formDialog').html(),
+                success: function (layero, dIndex) {
+                    $(".addres_detail").hide();
+                    var imgTypeInfo="";
+                    form.val('dataForm', mData);  // 回显数据
+                    if (mData != null) {
+                        $(".fujianBx").find("button").hide();
+
+                        var fjList = mData.fjList;
+                        var tr1 = "";
+                        for (var i = 0; i < fjList.length; i++) {
+                            tr1 += '<tr id="upload-' + i + '">' +
+                                '<td>' + fjList[i].imgName + '</td>' +
+                                '<td>上传成功</td>' +
+                                '<td>' +
+                                '<button class="layui-btn" type="button" iflag="'+fjList[i].imgType+'" onclick="delTr1(this)">删除</button>' +
+                                '</td>' +
+                                '</tr>';
+                            imgTypeInfo+=fjList[i].imgType;
+                            fujianList.push(fjList[i])
+                        }
+                        $("#demoList").append(tr1);
+                        if(imgTypeInfo.indexOf("yyzz")==-1)
+                            $("[iflag='yyzz']").show()
+                        if(imgTypeInfo.indexOf("sfzzm")==-1)
+                            $("[iflag='sfzzm']").show()
+                        if(imgTypeInfo.indexOf("sfzfm")==-1)
+                            $("[iflag='sfzfm']").show()
+                        if(imgTypeInfo.indexOf("qyht")==-1)
+                            $("[iflag='qyht']").show()
+                        if(imgTypeInfo.indexOf("fcz")==-1)
+                            $("[iflag='fcz']").show()
+                        if(imgTypeInfo.indexOf("zlht")==-1)
+                            $("[iflag='zlht']").show()
+                        if(imgTypeInfo.indexOf("fdsfz")==-1)
+                            $("[iflag='fdsfz']").show()
+
+                    }
+                    // 添加权限信息
+                    form.on('submit(saveBtn)', function (data) {
+                        data.field.fujianList = JSON.stringify(fujianList);
+                        //var len=$(".fujianBx").find("button:visible").length;
+                      /*  if(len>0){
+                            $(".fujianBx").find("button:visible").each(function (res) {
+                                $(this).css("border","solid red 1px")
+                            });
+                            return false;
+                        }*/
+                        $.post(mData ? 'customerResearch/update' : 'customerResearch/save', data.field, function (res) {
+                            if (res.code == 0) {
+                                layer.close(dIndex);
+                                layer.msg(res.msg, {icon: 1});
+                                insTb.reload({page: {curr: 1}});
+                            } else {
+                                layer.msg(res.msg, {icon: 2});
+                            }
+                        }, 'json');
+                        return false;
+                    });
+                }
+            });
+            layui.use('upload', function () {
+                var $ = layui.jquery
+                    , upload = layui.upload;
+                //多文件列表示例
+                var flag="";
+                var demoListView = $('#demoList'), uploadListIns = upload.render({
+                    elem: '.testList'
+                    , url: '/extend/upload/uploadFile'
+                    , accept: 'file'
+                    , multiple: true
+                    , auto: false
+                    , size: 5120
+                    ,progress: function(n, elem){
+                        flag=$(elem).attr("iflag")
+                        if(n==100) {
+                            $(elem).hide(); //得到当前触发的元素 DOM 对象。可通过该元素定义的属性值匹配到对应的进度条。
+                        }
+
+                    }
+                    , bindAction: '#testListAction'
+                    , choose: function (obj) {
+                        var files = this.files = obj.pushFile(); //将每次选择的文件追加到文件队列
+                        //读取本地文件
+                        obj.preview(function (index, file, result) {
+                            var tr = $(['<tr id="upload-' + index + '">'
+                                , '<td>' + file.name + '</td>'
+                                , '<td>上传中</td>'
+                                , '<td>'
+                                , '<button class="layui-btn layui-btn-mini demo-reload layui-hide">重传</button>'
+                                , '<button class="layui-btn layui-btn-mini layui-btn-danger demo-delete" iflag="\'+flag+\'">删除</button>'
+                                , '</td>'
+                                , '</tr>'].join(''));
+                            //单个重传
+                            tr.find('.demo-reload').on('click', function () {
+                                obj.upload(index, file);
+                            });
+                            //删除
+                            tr.find('.demo-delete').on('click', function (res) {
+                                var iflag=$(this).attr("iflag")
+                                $("[iflag='"+iflag+"']").show();
+                                delete files[index]; //删除对应的文件
+                                tr.remove();
+                                uploadListIns.config.elem.next()[0].value = ''; //清空 input file 值，以免删除后出现同名文件不可选
+                            });
+                            demoListView.append(tr);
+                            $("#testListAction").click();
+                        });
+                    }
+                    , done: function (res, index, upload) {
+                        if (res.code == 0) { //上传成功
+                            console.log(res.data);
+                            var tr = demoListView.find('tr#upload-' + index)
+                                , tds = tr.children();
+                            tds.eq(1).html('<span >上传成功</span>');
+                            tds.eq(2).find("button").attr("iflag",flag);
+                            var obj = new Object();
+                            obj.imgUrl = res.data.imgUrl;
+                            obj.imgName = res.data.imgName;
+                            obj.imgType = flag;
+                            fujianList.push(obj);
+                            return delete this.files[index]; //删除文件队列已经上传成功的文件
+
+                        }
+                        this.error(index, upload);
+                    }
+                    , error: function (index, upload) {
+                        var tr = demoListView.find('tr#upload-' + index)
+                            , tds = tr.children();
+                        tds.eq(1).html('<span >上传失败</span>');
+                        tds.eq(2).find('.demo-reload').removeClass('layui-hide'); //显示重传
+                    }
+                });
+
+
+            });
+        }
+
+
+        /* 表格搜索 */
+        form.on('submit(searchBtn)', function (data) {
+            cuFlag="1";
+            if (data.field.dateRange) {
+                var searchDate = data.field.dateRange.split(' - ');
+                data.field.startDate = searchDate[0];
+                data.field.endDate = searchDate[1];
+            } else {
+                data.field.startDate = '';
+                data.field.endDate = '';
+            }
+            data.field.dateRange = undefined;
+            data.field.corporateName = $("[name='corporateName']").val();
+            insTb.reload({where: data.field, page: {curr: 1}});
+            return false;
+        });
+
+        /* 导出excel */
+        $('#exportBtn').click(function () {
+            var checkRows = table.checkStatus('dataTable');
+            if (checkRows.data.length === 0) {
+                layer.msg('请选择要导出的数据', {icon: 2});
+            } else {
+                tableX.exportDataX({
+                    cols: insTb.config.cols,
+                    data: checkRows.data,
+                    fileName: '导出数据'
+                });
+            }
+        });
+
+
+        window.toContract = function(obj){
+            localStorage.setItem("customerName",obj);
+            location.href="/extend/contract/contractinfo.html";
+        }
+
+        window.delTr = function (obj) {
+            var index = $(obj).parents("tr").index();
+            console.log(yujianList)
+            yujianList.splice(index, 1);
+            $(obj).parents("tr").remove();
+            console.log(yujianList)
+        }
+        window.delTr1 = function (obj) {
+            var index = $(obj).parents("tr").index();
+            var iflag=$(obj).attr("iflag");
+            $("[iflag='"+iflag+"']").show();
+            fujianList.splice(index, 1);
+            $(obj).parents("tr").remove();
+            console.log(fujianList)
+        }
+        window.delTr2 = function (obj) {
+            var index = $(obj).parents("tr").index();
+            console.log(fuyinjList)
+            fuyinjList.splice(index, 1);
+            $(obj).parents("tr").remove();
+            console.log(fuyinjList)
+        }
+        /* 删除 */
+        window.doDel = function (obj) {
+            layer.confirm('确定要删除选中数据吗？', {
+                skin: 'layui-layer-admin',
+                shade: .1
+            }, function (i) {
+                layer.close(i);
+                var loadIndex = layer.load(2);
+                $.post('customerResearch/delete', {
+                    id: obj ? obj.id : '',
+                    ids: obj.ids ? obj.ids.join(',') : ''
+                }, function (res) {
+                    layer.close(loadIndex);
+                    if (res.code === 0) {
+                        layer.msg(res.msg, {icon: 1});
+                        insTb.reload({page: {curr: 1}});
+                    } else {
+                        layer.msg(res.msg, {icon: 2});
+                    }
+                }, 'json');
+            });
+        }
+        window.gaibian = function (res) {
+            var flag = $(res).val();
+            if (flag == "1") {
+                $(".addres_detail:hidden").show();
+
+            } else {
+                $(".addres_detail:visible").hide();
+            }
+        }
+
+    });
+
+</script>
+</body>
+</html>

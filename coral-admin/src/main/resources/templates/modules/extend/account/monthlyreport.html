@@ -1,0 +1,695 @@
+﻿<!DOCTYPE html>
+<html lang="zh-cn" class="fullscreen-bg" xmlns:th="http://www.thymeleaf.org"
+      xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<head th:replace="common/links :: common_header(~{::title},~{},~{})">
+    <title>月报表-模块</title>
+</head>
+<style>
+    .layui-layer-page {
+        height: 500px;
+        overflow: auto
+    }
+</style>
+<body>
+<!-- 页面加载loading -->
+<div class="page-loading">
+    <div class="ball-loader">
+        <span></span><span></span><span></span><span></span>
+    </div>
+</div>
+<!-- 正文开始 -->
+<div class="layui-fluid">
+    <div class="layui-card">
+        <div class="layui-card-body">
+            <!-- 表格工具栏 -->
+            <form class="layui-form toolbar">
+                <div class="layui-form-item">
+                    <div class="layui-inline">
+                        <label class="layui-form-label">会计编号:</label>
+                        <div class="layui-input-inline">
+                            <select name="userId" placeholder="请选择记账会计" lay-search class="seloption"
+                                    lay-verType="tips" ></select>
+                        </div>
+                    </div>
+                    <div class="layui-inline">
+                        <label class="layui-form-label">客户名称:</label>
+                        <div class="layui-input-inline">
+                            <input name="customerName" class="layui-input" placeholder="请输入客户名称"/>
+                        </div>
+                    </div>
+
+                    <div class="layui-inline">&emsp;
+                        <button class="layui-btn icon-btn" lay-filter="searchBtn" lay-submit>
+                            <i class="layui-icon">&#xe615;</i>搜索
+                        </button>&nbsp;
+                        <button shiro:hasPermission="monthlyReport:export" id="exportBtn" class="layui-btn icon-btn"
+                                type="button">
+                            <i class="layui-icon">&#xe67d;</i>导出
+                        </button>
+                    </div>
+                </div>
+            </form>
+            <!-- 数据表格 -->
+            <table id="dataTable" lay-filter="dataTable"></table>
+        </div>
+    </div>
+</div>
+
+<!-- 表格操作列 -->
+<script type="text/html" id="tableBar">
+    <a shiro:hasPermission="monthlyReport:update" class="layui-btn layui-btn-primary layui-btn-xs"
+       lay-event="edit">修改</a>
+    <a shiro:hasPermission="monthlyReport:delete" class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+    {{#if(d.status == 1 || d.status == 3  ){ }}
+    <a shiro:hasPermission="monthlyReport:tongzhi" class="layui-btn layui-btn-danger layui-btn-xs" lay-event="tongzhi">微信通知</a>
+    {{# } }}
+    {{#if(d.status == 0 ){ }}
+    <a shiro:hasPermission="monthlyReport:shenhe" class="layui-btn layui-btn-danger layui-btn-xs"
+       lay-event="shenhe">审核</a>
+    {{# } }}
+</script>
+
+<!-- 表单弹窗 -->
+<script type="text/html" id="formDialog">
+    <form id="dataForm" lay-filter="dataForm" class="layui-form model-form">
+        <input name="id" type="hidden"/>
+
+        <div class="layui-form-item" style="display: inline-block;width: 32%;">
+            <label class="layui-form-label layui-form-required">公司名称:</label>
+            <div class="layui-input-block">
+                <input name="customerName" placeholder="请选择公司名称" class="layui-input"
+                       lay-verType="tips" list="customerList" autocomplete="off" lay-verify="required" required/>
+                <datalist id="customerList">
+                </datalist>
+                <!--<input name="firmId" placeholder="请输入客户编号" class="layui-input"
+                       lay-verType="tips" lay-verify="required" required/>-->
+            </div>
+        </div>
+        <div class="layui-form-item" style="display: inline-block;width: 32%;">
+            <label class="layui-form-label ">资产:</label>
+            <div class="layui-input-block">
+                <input name="assets" placeholder="请输入资产" class="layui-input"
+                       lay-verType="tips"/>
+            </div>
+        </div>
+        <div class="layui-form-item" style="display: inline-block;width: 32%;">
+            <label class="layui-form-label ">负债:</label>
+            <div class="layui-input-block">
+                <input name="liabilities" placeholder="请输入负债" class="layui-input"
+                       lay-verType="tips" />
+            </div>
+        </div>
+        <div class="layui-form-item" style="display: inline-block;width: 32%;">
+            <label class="layui-form-label ">法人负债:</label>
+            <div class="layui-input-block">
+                <input name="corporationLiabilities" placeholder="请输入法人负债" class="layui-input"
+                       lay-verType="tips" />
+            </div>
+        </div>
+        <div class="layui-form-item" style="display: inline-block;width: 32%;">
+            <label class="layui-form-label ">存货（商品）:</label>
+            <div class="layui-input-block">
+                <input name="shangpch" placeholder="请输入存货商品" class="layui-input"
+                       lay-verType="tips" />
+            </div>
+        </div>
+        <div class="layui-form-item" style="display: inline-block;width: 32%;">
+            <label class="layui-form-label ">本月营业收入:</label>
+            <div class="layui-input-block">
+                <input name="businessIncome" onchange="jisuanyuelr()" placeholder="请输入本月营业收入" class="layui-input"
+                       lay-verType="tips" />
+            </div>
+        </div>
+        <div class="layui-form-item" style="display: inline-block;width: 32%;">
+            <label class="layui-form-label ">本月营业成本及费用:</label>
+            <div class="layui-input-block">
+                <input name="operatingCosts" onchange="jisuanyuelr()"  placeholder="请输入本月营业成本及费用" class="layui-input"
+                       lay-verType="tips" />
+            </div>
+        </div>
+        <div class="layui-form-item" style="display: inline-block;width: 32%;">
+            <label class="layui-form-label ">本月利润:</label>
+            <div class="layui-input-block">
+                <input name="monthProfit" onchange="jisuanyuelr()"  placeholder="请输入本月利润" class="layui-input"
+                       lay-verType="tips" />
+            </div>
+        </div>
+        <div class="layui-form-item" style="display: inline-block;width: 32%;">
+            <label class="layui-form-label ">季度收入:</label>
+            <div class="layui-input-block">
+                <input name="quarterIncome" onchange="jisuanjilr()" placeholder="请输入季度收入" class="layui-input"
+                       lay-verType="tips" />
+            </div>
+        </div>
+        <div class="layui-form-item" style="display: inline-block;width: 32%;">
+            <label class="layui-form-label ">季度成本及费用:</label>
+            <div class="layui-input-block">
+                <input name="quarterCosts" onchange="jisuanjilr()" placeholder="请输入季度成本及费用" class="layui-input"
+                       lay-verType="tips"/>
+            </div>
+        </div>
+        <div class="layui-form-item" style="display: inline-block;width: 32%;">
+            <label class="layui-form-label ">季度利润:</label>
+            <div class="layui-input-block">
+                <input name="quarterProfit" onchange="jisuanjilr()" placeholder="请输入季度利润" class="layui-input"
+                       lay-verType="tips" />
+            </div>
+        </div>
+        <div class="layui-form-item" style="display: inline-block;width: 32%;">
+            <label class="layui-form-label ">年度收入:</label>
+            <div class="layui-input-block">
+                <input name="yearIncome" onchange="jisuannianlr()" placeholder="请输入年度收入" class="layui-input"
+                       lay-verType="tips" />
+            </div>
+        </div>
+        <div class="layui-form-item" style="display: inline-block;width: 32%;">
+            <label class="layui-form-label ">年度成本及费用:</label>
+            <div class="layui-input-block">
+                <input name="yearCosts" onchange="jisuannianlr()" placeholder="请输入年度成本及费用" class="layui-input"
+                       lay-verType="tips"/>
+            </div>
+        </div>
+        <div class="layui-form-item" style="display: inline-block;width: 32%;">
+            <label class="layui-form-label ">年度利润:</label>
+            <div class="layui-input-block">
+                <input name="yearProfit" onchange="jisuannianlr()" placeholder="请输入年度利润" class="layui-input"
+                       lay-verType="tips" />
+            </div>
+        </div>
+        <div class="layui-form-item" style="display: inline-block;width: 32%;">
+            <label class="layui-form-label ">增值税:</label>
+            <div class="layui-input-block">
+                <input name="incrementTax" placeholder="请输入增值税" class="layui-input"
+                       lay-verType="tips"/>
+            </div>
+        </div>
+        <div class="layui-form-item" style="display: inline-block;width: 32%;">
+            <label class="layui-form-label ">增值税附加税:</label>
+            <div class="layui-input-block">
+                <input name="surtax" placeholder="请输入附加税" class="layui-input"
+                       lay-verType="tips"/>
+            </div>
+        </div>
+        <div class="layui-form-item" style="display: inline-block;width: 32%;">
+            <label class="layui-form-label ">企业所得税:</label>
+            <div class="layui-input-block">
+                <input name="incomeTax" placeholder="请输入所得税" class="layui-input"
+                       lay-verType="tips"/>
+            </div>
+        </div>
+        <div class="layui-form-item" style="display: inline-block;width: 32%;">
+            <label class="layui-form-label ">水利基金:</label>
+            <div class="layui-input-block">
+                <input name="waterConservancyFund" placeholder="请输入水利基金" class="layui-input"
+                       lay-verType="tips"/>
+            </div>
+        </div>
+        <div class="layui-form-item" style="display: inline-block;width: 32%;">
+            <label class="layui-form-label">工会经费:</label>
+            <div class="layui-input-block">
+                <input name="laborUnionFunds" placeholder="请输入工会经费" class="layui-input"
+                       lay-verType="tips"/>
+            </div>
+        </div>
+        <div class="layui-form-item" style="display: inline-block;width: 32%;">
+            <label class="layui-form-label ">期末留抵:</label>
+            <div class="layui-input-block">
+                <input name="retentiveBase" placeholder="请输入期末留底" class="layui-input"
+                       lay-verType="tips"/>
+            </div>
+        </div>
+        <div class="layui-form-item" style="display: inline-block;width: 32%;">
+            <label class="layui-form-label ">文化事业建设费:</label>
+            <div class="layui-input-block">
+                <input name="wenhuajs" placeholder="请输入文化建设" class="layui-input"
+                       lay-verType="tips"/>
+            </div>
+        </div>
+        <div class="layui-form-item" style="display: inline-block;width: 32%;">
+            <label class="layui-form-label ">印花税:</label>
+            <div class="layui-input-block">
+                <input name="yinhuaTax" placeholder="请输入印花税" class="layui-input"
+                       lay-verType="tips"/>
+            </div>
+        </div>
+        <div class="layui-form-item" style="display: inline-block;width: 32%;">
+            <label class="layui-form-label ">个人所得税:</label>
+            <div class="layui-input-block">
+                <input name="gerenSuode" placeholder="请输入个人所得" class="layui-input"
+                       lay-verType="tips"/>
+            </div>
+        </div>
+        <div class="layui-form-item" style="display: inline-block;width: 32%;">
+            <label class="layui-form-label ">社保:</label>
+            <div class="layui-input-block">
+                <input name="shebao" placeholder="请输入社保" class="layui-input"
+                       lay-verType="tips" />
+            </div>
+        </div>
+        <div class="layui-form-item" style="display: inline-block;width: 32%;">
+            <label class="layui-form-label ">个人经营所得:</label>
+            <div class="layui-input-block">
+                <input name="jingyingSuode" placeholder="请输入经营所得" class="layui-input"
+                       lay-verType="tips"/>
+            </div>
+        </div>
+        <div class="layui-form-item" style="display: inline-block;width: 32%;">
+            <label class="layui-form-label ">城镇土地使用税:</label>
+            <div class="layui-input-block">
+                <input name="landUseTax" placeholder="请输入土地使用税" class="layui-input"
+                       lay-verType="tips" />
+            </div>
+        </div>
+        <div class="layui-form-item" style="display: inline-block;width: 32%;">
+            <label class="layui-form-label ">残保金:</label>
+            <div class="layui-input-block">
+                <input name="canbaoJin" placeholder="请输入残保金" class="layui-input"
+                       lay-verType="tips"/>
+            </div>
+        </div>
+        <div class="layui-form-item" style="display: inline-block;width: 32%;">
+            <label class="layui-form-label ">房产税:</label>
+            <div class="layui-input-block">
+                <input name="propertyTax" placeholder="请输入房产税" class="layui-input"
+                       lay-verType="tips"/>
+            </div>
+        </div>
+        <div class="layui-form-item" style="display: inline-block;width: 32%;">
+            <label class="layui-form-label ">其他费用:</label>
+            <div class="layui-input-block">
+                <input name="otherTax" placeholder="请输入其他费用" class="layui-input"
+                       lay-verType="tips"/>
+            </div>
+        </div>
+
+        <div class="layui-form-item" style="display: inline-block;width: 32%;">
+            <label class="layui-form-label ">成本费用发票:</label>
+            <div class="layui-input-block">
+                <input name="invoice" placeholder="请输入发票" class="layui-input"
+                       lay-verType="tips"/>
+            </div>
+        </div>
+        <div class="layui-form-item" style="display: inline-block;width: 32%;">
+            <label class="layui-form-label layui-form-required">会计人员:</label>
+            <div class="layui-input-block">
+                <select name="userId" placeholder="请选择会计人员" class="seloption"
+                        lay-verType="tips" lay-verify="required" required></select>
+            </div>
+        </div>
+
+        <div class="layui-form-item" style="display: inline-block;width: 32%;">
+            <label class="layui-form-label ">选择月份</label>
+            <div class="layui-input-block">
+                <input name="createTimeStr" placeholder="请选择月份" class="layui-input"
+                       lay-verType="tips"/>
+            </div>
+        </div>
+
+        <div class="layui-form-item text-right">
+            <button class="layui-btn" lay-filter="saveBtn" lay-submit>保存</button>
+            <button class="layui-btn layui-btn-primary" type="button" ew-event="closeDialog">取消</button>
+        </div>
+    </form>
+</script>
+<!-- js部分 -->
+<div th:replace="common/scripts :: common"></div>
+<div th:replace="common/scripts :: custom"></div>
+<div>
+    <script>
+        //全局变量 Shiro权限
+        var shiroSave = false;
+        var shiroDelete = false;
+        var shiroUpdate = false;
+        var shiroInfo = false;
+        var shiroTongzhi = false;
+        var shiroShenhe = false;
+    </script>
+    <!-- 设置Shiro权限变量 -->
+    <shiro:hasAllPermissions name="monthlyReport:save">
+        <script>shiroSave = true;</script>
+    </shiro:hasAllPermissions>
+    <shiro:hasAllPermissions name="monthlyReport:delete">
+        <script>shiroDelete = true;</script>
+    </shiro:hasAllPermissions>
+    <shiro:hasAllPermissions name="monthlyReport:update">
+        <script>shiroUpdate = true;</script>
+    </shiro:hasAllPermissions>
+    <shiro:hasAllPermissions name="monthlyReport:tongzhi">
+        <script>shiroTongzhi = true;</script>
+    </shiro:hasAllPermissions>
+    <shiro:hasAllPermissions name="monthlyReport:shenhe">
+        <script>shiroShenhe = true;</script>
+    </shiro:hasAllPermissions>
+</div>
+<script>
+    layui.use(['layer', 'form', 'table', 'util', 'laydate', 'tableX', 'admin'], function () {
+        var $ = layui.jquery;
+        var layer = layui.layer;
+        var form = layui.form;
+        var table = layui.table;
+        var util = layui.util;
+        var laydate = layui.laydate;
+        var tableX = layui.tableX;
+        var admin = layui.admin;
+
+        /* 渲染表格 */
+        var cols = [
+            {type: 'checkbox',fixed:true},
+            {field: 'customerName',width:190,fixed:true, title: '公司名称',templet: function (d) {
+                    return "<a href='javascript:void(0);' onclick='showUpdateInfo(\""+d.id+"\")'>"+d.customerName+"</a>"
+                }, align: 'center'},
+            {field: 'createTime', title: '月份',templet:function(d){
+                    return util.toDateString(d.createTime,"MM月")
+                }, align: 'center'},
+            { title: '纳税性质',templet: function (d) {
+                    var strs = [
+                        '<span class="layui-badge layui-badge-green">小规模</span>',
+                        '<span class="layui-badge layui-badge-blue">一般纳税人</span>',
+                        '<span class="layui-badge layui-badge-yellow">个体户</span>',
+                        '<span class="layui-badge layui-badge-pink">个体户一般纳税人</span>'
+                    ];
+                    return d.nsxzName==null?"":d.nsxzName==""?"":strs[d.nsxzName];
+                }, align: 'center'},
+            {
+                title: '月报状态', templet: function (d) {
+                    var strs = [
+                        '<span class="layui-badge layui-badge-yellow">待审核</span>',
+                        '<span class="layui-badge layui-badge-green">审核通过</span>',
+                        '<span class="layui-badge layui-badge-red">审核不通过</span>',
+                        '<span class="layui-badge layui-badge-cyan">已发送</span>',
+                    ];
+                    return d.status==null?"":strs[d.status];
+                }, align: 'center'
+            },
+
+            {field: 'assets', title: '资产', align: 'center'},
+            {field: 'liabilities', title: '负债', align: 'center'},
+            {field: 'corporationLiabilities', title: '法人负债', align: 'center'},
+            {field: 'shangpch', title: '存货商品', align: 'center'},
+            {field: 'businessIncome', title: '本月营业收入', align: 'center'},
+            {field: 'operatingCosts', title: '本月营业成本及费用', align: 'center'},
+            {field: 'monthProfit', title: '本月利润', align: 'center'},
+            {field: 'quarterIncome', title: '季度收入', align: 'center'},
+            {field: 'quarterCosts', title: '季度成本及费用', align: 'center'},
+            {field: 'quarterProfit', title: '季度利润', align: 'center'},
+            {field: 'yearIncome', title: '年度收入', align: 'center'},
+            {field: 'yearCosts', title: '年度成本及费用', align: 'center'},
+            {field: 'yearProfit', title: '年度利润', align: 'center'},
+            {field: 'incrementTax', title: '增值税', align: 'center'},
+            {field: 'surtax', title: '增值税附加税', align: 'center'},
+            {field: 'incomeTax', title: '企业所得税', align: 'center'},
+            {field: 'waterConservancyFund', title: '水利基金', align: 'center'},
+            {field: 'laborUnionFunds', title: '工会经费', align: 'center'},
+            {field: 'retentiveBase', title: '期末留抵', align: 'center'},
+            {field: 'wenhuajs', title: '文化事业建设费', align: 'center'},
+            {field: 'yinhuaTax', title: '印花税', align: 'center'},
+            {field: 'gerenSuode', title: '个人所得税', align: 'center'},
+            {field: 'shebao', title: '社保', align: 'center'},
+            {field: 'jingyingSuode', title: '个人经营所得', align: 'center'},
+            {field: 'landUseTax', title: '城镇土地使用税', align: 'center'},
+            {field: 'canbaoJin', title: '残保金', align: 'center'},
+            {field: 'propertyTax', title: '房产税', align: 'center'},
+            {field: 'otherTax', title: '其他费用', align: 'center'},
+            {field: 'invoice', title: '成本及费用发票', align: 'center'},
+            {field: 'userName', title: '会计名称', align: 'center'},
+            {field: 'shenheName', title: '审核人员名称', align: 'center'},
+            {title: '操作', toolbar: '#tableBar', align: 'center', minWidth: 200}
+        ];
+        var pageIdx=1;
+        var insTb = table.render({
+            elem: '#dataTable',
+            url: 'monthlyReport/page',
+            where:{"shFlag":shiroShenhe},
+            page: true,
+            toolbar: [shiroToolbar(shiroSave, shiroDelete)].join(''),
+            cellMinWidth: 100,
+            cols: [cols],
+            done: function (res, curr, count) {
+                pageIdx=curr;
+                // 绑定鼠标右键
+                //tableX.bindCtxMenu('dataTable', shiroBindCtxMenu(shiroDelete, shiroUpdate));
+            }
+        });
+
+
+
+        $.ajax({
+            url:"/extend/contract/contractInfo/userRoles/list",
+            data:{"roleId":"14"},
+            dataType:"json",
+            async:false,
+            type:"get",
+            success:function(res){
+                var userInfo="<option value=''>请选择代账会计</option>"
+                for(var i=0;i<res.data.length;i++){
+                    var user=res.data[i];
+                    userInfo+="<option value='"+user.id+"'>"+user.realname+"</option>"
+                }
+                $("[name='userId']").html("")
+                $("[name='userId']").append(userInfo);
+                form.render('select');
+            }
+        });
+
+        /* 渲染时间选择 */
+        laydate.render({
+            elem: 'input[name="dateRange"]',
+            type: 'date',
+            range: true,
+            trigger: 'click'
+        });
+
+
+        /* 表格工具条点击事件 */
+        table.on('tool(dataTable)', function (obj) {
+            if (obj.event === 'edit') { // 修改
+                showEditModel(obj.data);
+            } else if (obj.event === 'del') { // 删除
+                doDel(obj.data);
+            } else if (obj.event === 'reset') { // 重置密码
+                resetPsw(obj);
+            } else if (obj.event === 'tongzhi') {
+                tongzhi(obj.data)
+            } else if (obj.event === 'shenhe') {
+                shenhe(obj.data);
+            }
+        });
+
+        /* 表格头工具栏点击事件 */
+        table.on('toolbar(dataTable)', function (obj) {
+            if (obj.event === 'add') { // 添加
+                showEditModel();
+            } else if (obj.event === 'del') { // 删除
+                var checkRows = table.checkStatus('dataTable');
+                if (checkRows.data.length === 0) {
+                    layer.msg('请选择要删除的数据', {icon: 2});
+                    return;
+                }
+                var ids = checkRows.data.map(function (d) {
+                    return d.id;
+                });
+                doDel({ids: ids});
+            }
+        });
+
+        // 显示编辑弹窗
+        function showEditModel(mData) {
+            admin.open({
+                type: 1,
+                area: ['98%', '98%'],
+                offset: ['10px', '10px'],
+                title: (mData ? '修改' : '添加'),
+                content: $('#formDialog').html(),
+                success: function (layero, dIndex) {
+                    $.ajax({
+                        url: "/extend/customer/customerResearch/list",
+                        /*data:{"roleId":"13"},*/
+                        dataType: "json",
+                        async: false,
+                        type: "get",
+                        success: function (res) {
+                            var userInfo = ""
+                            for (var i = 0; i < res.data.length; i++) {
+                                var user = res.data[i];
+                                userInfo += "<option value='" + user.corporateName + "'>"
+                            }
+                            $("#customerList").html(userInfo)
+                            form.render('select', 'group');
+                        }
+                    });
+                    if(mData){
+                        $("[name='createTimeStr']").parents(".layui-form-item").hide();
+                    }else{
+                        $("[name='createTimeStr']").parents(".layui-form-item").show();
+                    }
+                    laydate.render({
+                        elem: 'input[name="createTimeStr"]',
+                        type: 'date',
+                        trigger: 'click'
+                    });
+                    $.ajax({
+                        url: "/extend/contract/contractInfo/userRoles/list",
+                        data: {"roleId": "14"},
+                        dataType: "json",
+                        async: false,
+                        type: "get",
+                        success: function (res) {
+                            var userInfo = "<option value=''>请选择会计人员</option>"
+                            for (var i = 0; i < res.data.length; i++) {
+                                var user = res.data[i];
+                                userInfo += "<option value='" + user.id + "'>" + user.realname + "</option>"
+                            }
+                            $("[name='userId']").html("")
+                            $("[name='userId']").append(userInfo);
+                            form.render('select', 'group');
+                        }
+                    });
+                    form.val('dataForm', mData);  // 回显数据
+                    // 添加权限信息
+                    form.on('submit(saveBtn)', function (data) {
+                        $.post(mData ? 'monthlyReport/update' : 'monthlyReport/save', data.field, function (res) {
+                            if (res.code == 0) {
+                                layer.close(dIndex);
+                                layer.msg(res.msg, {icon: 1});
+                                insTb.reload({page: {curr: pageIdx}});
+                            } else {
+                                layer.msg(res.msg, {icon: 2});
+                            }
+                        }, 'json');
+                        return false;
+                    });
+                }
+            });
+        }
+
+        /* 表格搜索 */
+        form.on('submit(searchBtn)', function (data) {
+            if (data.field.dateRange) {
+                var searchDate = data.field.dateRange.split(' - ');
+                data.field.startDate = searchDate[0];
+                data.field.endDate = searchDate[1];
+            } else {
+                data.field.startDate = '';
+                data.field.endDate = '';
+            }
+            data.field.dateRange = undefined;
+            insTb.reload({where: data.field, page: {curr: pageIdx}});
+            return false;
+        });
+
+        /* 导出excel */
+        $('#exportBtn').click(function () {
+            var checkRows = table.checkStatus('dataTable');
+            if (checkRows.data.length === 0) {
+                layer.msg('请选择要导出的数据', {icon: 2});
+            } else {
+                tableX.exportDataX({
+                    cols: insTb.config.cols,
+                    data: checkRows.data,
+                    fileName: '导出数据'
+                });
+            }
+        });
+
+        window.jisuanyuelr = function(obj){
+            var businessIncome=$("[name='businessIncome']").val();
+            var monthProfit=$("[name='monthProfit']").val();
+            if(businessIncome!=""&&monthProfit!="") {
+                var lr=parseFloat(businessIncome)-parseFloat(monthProfit);
+                $("[name='operatingCosts']").val(lr.toFixed(2));
+            }
+
+        }
+
+        window.jisuanjilr = function(obj){
+            var quarterIncome=$("[name='quarterIncome']").val();
+            var quarterProfit=$("[name='quarterProfit']").val();
+            if(quarterIncome!=""&&quarterProfit!="") {
+                var lr=parseFloat(quarterIncome)-parseFloat(quarterProfit);
+                $("[name='quarterCosts']").val(lr.toFixed(2));
+            }
+        }
+
+        window.jisuannianlr = function(obj){
+            var yearIncome=$("[name='yearIncome']").val();
+            var yearProfit=$("[name='yearProfit']").val();
+            if(yearIncome!=""&&yearProfit!="") {
+                var lr=parseFloat(yearIncome)-parseFloat(yearProfit);
+                $("[name='yearCosts']").val(lr.toFixed(2));
+            }
+        }
+
+        window.showUpdateInfo = function(obj){
+            $.get("monthlyReport/info",{"id":obj},function (res) {
+                showEditModel(res.data);
+            })
+
+        }
+
+        /*通知*/
+        window.tongzhi = function (obj) {
+            layer.confirm('确认微信发生月报通知吗？', {
+                skin: 'layui-layer-admin',
+                shade: .1
+            }, function (i) {
+                layer.close(i);
+                var loadIndex = layer.load(2);
+                $.post('monthlyReport/wxtongzhi', {
+                    id: obj ? obj.id : ''
+                }, function (res) {
+                    layer.close(loadIndex);
+                    if (res.code === 0) {
+                        layer.msg(res.msg, {icon: 1});
+                        insTb.reload({page: {curr: pageIdx}});
+                    } else {
+                        layer.msg(res.msg, {icon: 2});
+                    }
+                }, 'json');
+            });
+        }
+        window.shenhe = function (obj) {
+            layer.confirm('确认审核通过该份月报吗？', {
+                skin: 'layui-layer-admin',
+                shade: .1
+            }, function (i) {
+                layer.close(i);
+                var loadIndex = layer.load(2);
+                $.post('monthlyReport/shenhe', {
+                    id: obj ? obj.id : ''
+                }, function (res) {
+                    layer.close(loadIndex);
+                    if (res.code === 0) {
+                        layer.msg(res.msg, {icon: 1});
+                        insTb.reload({page: {curr: pageIdx}});
+                    } else {
+                        layer.msg(res.msg, {icon: 2});
+                    }
+                }, 'json');
+            });
+        }
+        /* 删除 */
+        window.doDel = function (obj) {
+            layer.confirm('确定要删除选中数据吗？', {
+                skin: 'layui-layer-admin',
+                shade: .1
+            }, function (i) {
+                layer.close(i);
+                var loadIndex = layer.load(2);
+                $.post('monthlyReport/delete', {
+                    id: obj ? obj.id : '',
+                    ids: obj.ids ? obj.ids.join(',') : ''
+                }, function (res) {
+                    layer.close(loadIndex);
+                    if (res.code === 0) {
+                        layer.msg(res.msg, {icon: 1});
+                        insTb.reload({page: {curr: pageIdx}});
+                    } else {
+                        layer.msg(res.msg, {icon: 2});
+                    }
+                }, 'json');
+            });
+        }
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.gemframework.mapper.RightMapper">
+
+    <select id="findRightsByRoleAndType" resultType="com.gemframework.model.entity.po.Right">
+            SELECT
+                r.*
+            FROM
+                gem_sys_right r
+            LEFT JOIN gem_sys_role_rights rr ON r.id = rr.right_id
+            WHERE
+                rr.role_id = #{role_id} and r.type = #{type}
+            ORDER BY
+                r.sort_number
+    </select>
+
+</mapper>
+
+
+
+

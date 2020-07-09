@@ -1,0 +1,138 @@
+﻿<!DOCTYPE html>
+<html lang="zh-cn" class="fullscreen-bg" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<head th:replace="common/links :: common_header(~{::title},~{},~{})">
+    <title>系统日志</title>
+</head>
+<body>
+<!-- 页面加载loading -->
+<div class="page-loading">
+    <div class="ball-loader">
+        <span></span><span></span><span></span><span></span>
+    </div>
+</div>
+<!-- 正文开始 -->
+<div class="layui-fluid">
+    <div class="layui-card">
+        <div class="layui-card-body">
+            <!-- 表格工具栏 -->
+            <form class="layui-form toolbar">
+                <div class="layui-form-item">
+                    <div class="layui-inline">
+                        <label class="layui-form-label">用户账号:</label>
+                        <div class="layui-input-inline">
+                            <input name="username" class="layui-input" placeholder="请输入用户账号"/>
+                        </div>
+                    </div>
+                    <div class="layui-inline">
+                        <label class="layui-form-label">操作内容:</label>
+                        <div class="layui-input-inline">
+                            <input name="operation" class="layui-input" placeholder="请输入操作内容"/>
+                        </div>
+                    </div>
+                    <div class="layui-inline">
+                        <label class="layui-form-label">操作日期:</label>
+                        <div class="layui-input-inline">
+                            <input name="dateRange" class="layui-input icon-date" placeholder="选择日期范围"
+                                   autocomplete="off"/>
+                        </div>
+                    </div>
+                    <div class="layui-inline">&emsp;
+                        <button class="layui-btn icon-btn" lay-filter="searchBtn" lay-submit>
+                            <i class="layui-icon">&#xe615;</i>搜索
+                        </button>&nbsp;
+                        <button shiro:hasPermission="sysLogs:export" id="exportBtn" class="layui-btn icon-btn" type="button">
+                            <i class="layui-icon">&#xe67d;</i>导出
+                        </button>
+                    </div>
+                </div>
+            </form>
+            <!-- 数据表格 -->
+            <table id="dataTable" lay-filter="dataTable"></table>
+        </div>
+    </div>
+</div>
+<!-- 表格状态列 -->
+<script type="text/html" id="sysLogsStatus">
+    <p>{{d.status==0?'成功':'失败'}}</p>
+</script>
+
+<!-- js部分1 -->
+<div th:replace="common/scripts :: common"></div>
+<div th:replace="common/scripts :: custom"></div>
+<div th:replace="common/shiro :: userShiroTag"></div>
+<script>
+    layui.use(['layer', 'form', 'table', 'util', 'laydate', 'tableX'], function () {
+        var $ = layui.jquery;
+        var layer = layui.layer;
+        var form = layui.form;
+        var table = layui.table;
+        var util = layui.util;
+        var laydate = layui.laydate;
+        var tableX = layui.tableX;
+
+        /* 渲染表格 */
+        var cols = [
+            {type: 'checkbox'},
+            {field: 'username', title: '用户账号',align: 'center'},
+            {field: 'userip', title: '用户IP',align: 'center', width: 150},
+            {field: 'operation', title: '操作内容', sort: true},
+            {field: 'params', title: '参数'},
+            {field: 'times', title: '耗时(ms)', sort: true, align: 'center', width: 110},
+            {field: 'status', title: '状态', sort: true, templet: '#sysLogsStatus', align: 'center', width: 80},
+            {field: 'statusMsg', title: '消息', sort: true,align: 'center', width: 110},
+            {
+                field: 'createTime', title: '操作时间', templet: function (d) {
+                    return util.toDateString(d.createTime);
+                }, sort: true
+            }
+        ];
+        var insTb = table.render({
+            elem: '#dataTable',
+            url: 'sysLogs/page',
+            page: true,
+            toolbar: true,
+            cellMinWidth: 100,
+            cols: [cols]
+        });
+
+        /* 渲染时间选择 */
+        laydate.render({
+            elem: 'input[name="dateRange"]',
+            type: 'date',
+            range: true,
+            trigger: 'click'
+        });
+
+        /* 表格搜索 */
+        form.on('submit(searchBtn)', function (data) {
+            if (data.field.dateRange) {
+                var searchDate = data.field.dateRange.split(' - ');
+                data.field.startDate = searchDate[0];
+                data.field.endDate = searchDate[1];
+            } else {
+                data.field.startDate = '';
+                data.field.endDate = '';
+            }
+            data.field.dateRange = undefined;
+            insTb.reload({where: data.field, page: {curr: 1}});
+            return false;
+        });
+
+        /* 导出excel */
+        $('#exportBtn').click(function () {
+            var checkRows = table.checkStatus('dataTable');
+            if (checkRows.data.length === 0) {
+                layer.msg('请选择要导出的数据', {icon: 2});
+            } else {
+                tableX.exportDataX({
+                    cols: insTb.config.cols,
+                    data: checkRows.data,
+                    fileName: '系统日志'
+                });
+            }
+        });
+
+    });
+</script>
+</body>
+</html>

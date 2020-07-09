@@ -1,0 +1,46 @@
+spring:
+  profiles:
+    # dev 开发 prod 生产 test 测试（demo）
+    active: dev
+
+  #==============公共的配置&不常修改的配置==============
+  #thymeleaf配置
+  thymeleaf:
+    prefix: classpath:/templates/
+    suffix: .html
+    encoding: UTF-8
+    mode: HTML
+    cache: false
+
+  #热部署配置
+  devtools:
+    restart:
+      enabled: true #开启热部署
+      additional-paths: src/main/java
+      #exclude: static/**,public/**
+
+##自定义配置全局配置
+gem:
+  security:
+    open: true
+    login-page: /login
+    error-page: /error
+    denied-page: /403
+    nofound-page: /404
+    index-page: /index
+
+  #指定Swagger扫包路径
+  swagger:
+    web-package-path: com.gemframework.controller
+
+  #指定数据库类型 可选值有【mysql、oracle、sqlServer】
+  database: mysql
+  system:
+    min: 2
+    max: 22
+    desc: xxdd
+    generate-code-server-path: /app
+    #运行环境 【test 测试、demo演示、dev开发、prod生产】
+    runtime: dev
+    #是否集群环境部署 如果开启集群【cluster: true】 则切换为redis管理session
+    cluster: true

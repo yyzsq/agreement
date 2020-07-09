@@ -1,0 +1,2598 @@
+﻿<!DOCTYPE html>
+<html lang="zh-cn" class="fullscreen-bg" xmlns:th="http://www.thymeleaf.org"
+      xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<head th:replace="common/links :: common_header(~{::title},~{},~{})">
+    <title>合同信息表-模块</title>
+    <script type="text/javascript" th:src="@{/coral/js/contractinfo.js}"></script>
+</head>
+<style>
+    .layui-layer-page{
+        height: 500px;
+        overflow:auto
+    }
+</style>
+<body>
+<!-- 页面加载loading -->
+<div class="page-loading">
+    <div class="ball-loader">
+        <span></span><span></span><span></span><span></span>
+    </div>
+</div>
+<!-- 正文开始 -->
+<div class="layui-fluid">
+    <div class="layui-card">
+        <div class="layui-card-body">
+            <div class="layui-form-item">
+                <div class="layui-inline">
+                    <input type="hidden" name="userId" th:value="${session.session_user.id}" />
+                    <button type="button"  class="layui-btn showBtnColor" flag="" >全部</button>
+
+                </div>
+                <div class="layui-inline">
+                    <button type="button" class="layui-btn showBtnColor" flag="0" style="background-color: white;color: black;border:1px black solid;" >小规模 &nbsp;&nbsp;<span name="xgm"></span></button>
+
+                </div>
+                <div class="layui-inline ">
+                    <button type="button"  class="layui-btn showBtnColor" flag="1" style="background-color: white;color: black;border:1px black solid;">一般纳税人&nbsp;&nbsp;<span name="ybnsr"></span></button>
+
+                </div>
+                <div class="layui-inline">
+                    <button type="button"  class="layui-btn showBtnColor" flag="2"style="background-color: white;color: black;border:1px black solid;">个体户&nbsp;&nbsp;<span name="gth"></span></button>
+
+                </div>
+                <div class="layui-inline">
+                    <button type="button"  class="layui-btn showBtnColor" flag="3" style="background-color: white;color: black;border:1px black solid;">个体户一般纳税人&nbsp;&nbsp;<span name="gthnsr"></span></button>
+
+                </div>
+
+            </div>
+            <!-- 表格工具栏 -->
+            <form class="layui-form toolbar">
+                <div class="layui-form-item">
+                    <div class="layui-inline">
+                        <label class="layui-form-label">合同编号</label>
+                        <div class="layui-input-inline">
+                            <input name="contractId" id="contractId2" class="layui-input" />
+                        </div>
+                    </div>
+                    <div class="layui-inline">
+                        <label class="layui-form-label">公司名称</label>
+                        <div class="layui-input-inline">
+                            <input name="customerName" id="customerName" class="layui-input" />
+                        </div>
+                    </div>
+                    <!--<div class="layui-inline">
+                        <label class="layui-form-label">纳税性质</label>
+                        <div class="layui-input-inline">
+                            <select name="contractNature" class="layui-select"
+                                    lay-verType="tips" >
+                                <option value="">选择合同性质</option>
+                                <option value="0">小规模</option>
+                                <option value="1">一般纳税人</option>
+                                <option value="2">个体户</option>
+                                <option value="3">个体户一般纳税人</option>
+                            </select>
+                        </div>
+                    </div>-->
+                    <div class="layui-inline">
+                        <label class="layui-form-label">合同到期时间:</label>
+                        <div class="layui-input-inline">
+                            <input name="dateRange" class="layui-input icon-date" placeholder="选择日期范围"
+                                   autocomplete="off"/>
+                        </div>
+                    </div>
+
+                    <div class="layui-inline">
+                        <label class="layui-form-label">记账会计:</label>
+                        <div class="layui-input-inline">
+                            <select name="accounting3" placeholder="请选择记账会计" lay-search class="seloption"
+                                    lay-verType="tips" ></select>
+                        </div>
+                    </div>
+                    <div class="layui-inline">&emsp;
+                        <button class="layui-btn icon-btn"  lay-filter="searchBtn" lay-submit>
+                            <i class="layui-icon">&#xe615;</i>搜索
+                        </button>&nbsp;
+                        <button shiro:hasPermission="contractInfo:export" id="exportBtn" class="layui-btn icon-btn"
+                                type="button">
+                            <i class="layui-icon">&#xe67d;</i>导出
+                        </button>
+                    </div>
+                </div>
+            </form>
+            <!-- 数据表格 -->
+            <table id="dataTable" lay-filter="dataTable"></table>
+        </div>
+    </div>
+</div>
+
+<!-- 表格操作列 -->
+<script type="text/html" id="tableBar">
+    {{#if(d.other2 == 2){ }}
+    <a shiro:hasPermission="contractInfo:update"  class="layui-btn layui-btn-danger layui-btn-xs"
+       lay-event="cxtj">重新提交</a>
+    {{# } }}
+    {{#if(d.other2!=null&& d.other2 != 1){ }}
+    <a shiro:hasPermission="contractInfo:update" class="layui-btn layui-btn-primary layui-btn-xs"
+       lay-event="edit">修改</a>
+    {{# }else{ }}
+    <a shiro:hasPermission="contractInfo:glupdate" class="layui-btn layui-btn-primary layui-btn-xs"
+       lay-event="edit">修改</a>
+    {{# } }}
+    <a shiro:hasPermission="contractInfo:delete" class="layui-btn  layui-btn-primary layui-btn-xs" lay-event="del">删除</a>
+    <a shiro:hasPermission="contractInfo:xuqian" class="layui-btn layui-btn-normal layui-btn-xs" lay-event="xuqian">续签</a>
+    {{#if(d.status != 4 && d.status != 5 && d.status != 6){ }}
+        {{#if(d.accounting == null || d.accounting == ''){ }}
+            <a shiro:hasPermission="contractInfo:paigong" class="layui-btn layui-btn-danger layui-btn-xs" lay-event="paigong">派工</a>
+        {{# }else{ }}
+            {{#if(d.other1 == 0){ }}
+                <a shiro:hasPermission="contractInfo:shenpi" class="layui-btn layui-btn-green layui-btn-xs" lay-event="shenpi">审批</a>
+            {{# }else{ }}
+                <a shiro:hasPermission="contractInfo:jiaojie" class="layui-btn layui-btn-warm layui-btn-xs" lay-event="jiaojie">交接</a>
+            {{# } }}
+        {{# } }}
+        <a shiro:hasPermission="contractInfo:tingzhi" class="layui-btn layui-btn-danger layui-btn-xs" lay-event="tingzhi">停止/注销</a>
+    {{# } }}
+
+</script>
+<script type="text/html" id="contractId3">
+    <a href="javascript:void(0);"  onclick="showContractId('{{d.contractId}}')">{{d.contractId}}</a>
+    <!--<span class="showContractId">{{d.contractId}}</span>-->
+</script>
+<script type="text/html" id="billStatus">
+    <input type="checkbox" lay-filter="editStateBtn" value="{{d.id}}" lay-skin="switch"
+           lay-text="已开具|未开具" {{d.isBill==1?'checked':''}}  {{d.id==1?'disabled':''}} style="display: none;"/>
+    <p style="display: none;">{{d.isBill==0?'未开具':'已开具'}}</p>
+</script>
+
+<script type="text/html" id="formDialog1">
+    <form id="dataForm1" lay-filter="dataForm1" class="layui-form model-form" style="height: 275px;">
+        <input name="id" type="hidden"/>
+        <input name="customerId" type="hidden"/>
+        <input name="other2" type="hidden" />
+        <input name="accounting" type="hidden" />
+        <div class="layui-form-item">
+            <label class="layui-form-label layui-form-required">移交人员</label>
+            <div class="layui-input-block layui-form" lay-filter="group">
+                <select name="other1" onchange="xiugaiKj(this)"   class="seloption"
+                        lay-verType="tips" lay-verify="required" required>
+                    <option value="">请选择移交人员</option>
+                    <option value="0">会计</option>
+                    <option value="1">客户</option>
+                </select>
+            </div>
+        </div>
+        <div class="layui-form-item kjmc" style="display:none;">
+            <label class="layui-form-label layui-form-required">会计名称</label>
+            <div class="layui-input-block layui-form" lay-filter="group">
+                <select name="receiver" placeholder="请选择会计名称" class="seloption"
+                        lay-verType="tips" ></select>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label layui-form-required">交接原因</label>
+            <div class="layui-input-block layui-form" lay-filter="group">
+                <input name="remark"  placeholder="请输入交接原因" class="layui-input" rify="required" required/>
+            </div>
+        </div>
+        <div class="layui-form-item text-right">
+            <button class="layui-btn" lay-filter="saveBtn1" lay-submit>保存</button>
+            <button class="layui-btn layui-btn-primary" type="button" ew-event="closeDialog">取消</button>
+        </div>
+    </form>
+</script>
+<script type="text/html" id="formDialog5">
+    <form id="dataForm5" lay-filter="dataForm5" class="layui-form model-form" style="height: 280px;">
+        <input name="id" type="hidden"/>
+        <input name="customerId" type="hidden"/>
+        <input name="accounting" type="hidden" />
+        <div class="layui-form-item">
+            <label class="layui-form-label">移交会计：</label>
+            <div class="layui-input-block layui-form" lay-search  style="padding-top: 8px;" name="yjkj" lay-filter="group">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label ">交接原因：</label>
+            <div class="layui-input-block layui-form" style="padding-top: 8px;"  name="jjyy" lay-filter="group">
+            </div>
+        </div>
+        <div class="layui-form-item" style="height: 100px;">
+        </div>
+        <div class="layui-form-item text-right">
+            <button class="layui-btn" lay-filter="saveBtn5" lay-submit>通过</button>
+            <button class="layui-btn" style="background-color: red;" lay-filter="saveBtn6" lay-submit>不通过</button>
+            <button class="layui-btn layui-btn-primary" type="button" ew-event="closeDialog">取消</button>
+        </div>
+    </form>
+</script>
+
+<script type="text/html" id="formDialog8">
+    <form id="dataForm8" lay-filter="dataForm8" class="layui-form model-form" >
+        <input name="id" type="hidden"/>
+        <div class="layui-form-item">
+            <label class="layui-form-label">派工会计：</label>
+            <div class="layui-input-block">
+            <select name="accounting2" placeholder="请输入" lay-search class="seloption"
+                    lay-verType="tips" lay-verify="required" required></select>
+            </div>
+        </div>
+        <div class="layui-form-item text-right">
+            <button class="layui-btn" lay-filter="saveBtn8" lay-submit>确认</button>
+            <button class="layui-btn layui-btn-primary" type="button" ew-event="closeDialog">取消</button>
+        </div>
+    </form>
+</script>
+
+<script type="text/html" id="formDialog10">
+    <form id="dataForm10" lay-filter="dataForm10" class="layui-form model-form">
+        <div class="layui-form-item">
+            <label class="layui-form-label layui-form-required">补收合同编号</label>
+            <div class="layui-input-block layui-form" lay-filter="group">
+                <input name="guanLianId"  placeholder="请输入合同编号" class="layui-input" lay-verify="required" required/>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label layui-form-required">补收金额</label>
+            <div class="layui-input-block layui-form" lay-filter="group">
+                <input name="money"  placeholder="请输入补收金额" class="layui-input" lay-verify="required" required/>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label layui-form-required">支付方式</label>
+            <div class="layui-input-block">
+                <select name="payType" class="layui-select"
+                        lay-verType="tips" lay-verify="required" required>
+                    <option value="">请选择支付方式</option>
+                    <option value="0">微信</option>
+                    <option value="1">支付宝</option>
+                    <option value="2">现金</option>
+                    <option value="3">转账</option>
+                    <option value="4">刷卡</option>
+                </select>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label layui-form-required">补收备注</label>
+            <div class="layui-input-block layui-form" lay-filter="group">
+                <input name="remark"  placeholder="请输入补收备注" class="layui-input" lay-verify="required" required/>
+            </div>
+        </div>
+        <div class="layui-form-item text-right">
+            <button class="layui-btn" lay-filter="saveBtn10" lay-submit>确认</button>
+            <button class="layui-btn layui-btn-primary" type="button" ew-event="closeDialog">取消</button>
+        </div>
+    </form>
+</script>
+
+<script type="text/html" id="formDialog7">
+    <form id="dataForm7" lay-filter="dataForm7" class="layui-form model-form">
+        <input name="id" type="hidden"/>
+        <div class="layui-form-item">
+            <label class="layui-form-label layui-form-required">停止类型</label>
+            <div class="layui-input-block">
+                <select name="status" placeholder="请输入" class="seloption"
+                        lay-verType="tips" lay-verify="required" required>
+                    <option value="">请选择停止类型</option>
+                    <option value="4">停止服务</option>
+                    <option value="5">终止合同</option>
+                    <option value="6">注销公司</option>
+                </select>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label layui-form-required">停止原因</label>
+            <div class="layui-input-block layui-form" lay-filter="group">
+                <input name="remark2"  placeholder="请输入停止原因" class="layui-input" lay-verify="required" required/>
+            </div>
+        </div>
+
+        <div class="layui-inline">
+            <label class="layui-form-label">停止时间:</label>
+            <div class="layui-input-inline">
+                <input name="tingzhiTime" class="layui-input icon-date" placeholder="选择停止时间"
+                       autocomplete="off"/>
+            </div>
+        </div>
+
+        <div class="layui-form-item text-right">
+            <button class="layui-btn" lay-filter="saveBtn7" lay-submit>确认</button>
+            <button class="layui-btn layui-btn-primary" type="button" ew-event="closeDialog">取消</button>
+        </div>
+    </form>
+</script>
+<!-- 表单弹窗 -->
+<script type="text/html" id="formDialog">
+    <form id="dataForm" lay-filter="dataForm" onkeydown="if(event.keyCode==13){return false}" class="layui-form model-form" style="width: 90%;height: 90%;left: 20px;">
+        <input name="id" type="hidden"/>
+        <div class="layui-form-item" style="display: inline-block;width: 32%;">
+            <label class="layui-form-label layui-form-required">合同编号</label>
+            <div class="layui-input-block">
+                <input name="contractId" placeholder="请输入合同编号" disabled class="layui-input"
+                       lay-verType="tips" lay-verify="required" id="contractId" required/>
+            </div>
+        </div>
+        <div class="layui-form-item" style="display: inline-block;width:32%;">
+            <label class="layui-form-label layui-form-required">公司名称</label>
+            <div class="layui-input-block layui-form" lay-filter="group">
+                <input name="customerName" onchange="huoqushijian(this)"  placeholder="请选择公司名称" class="layui-input"
+                       lay-verType="tips" list="customerList" autocomplete="off" lay-verify="required" required/>
+                <datalist id="customerList" >
+                </datalist>
+            </div>
+           <!-- <a href="javascript:void(0);" style="color: blue;" onclick="addCus(this)">+添加客户</a>-->
+
+        </div>
+        <div class="layui-form-item" style="display: inline-block;width:32%">
+            <label class="layui-form-label" style="padding: 9px 0;width:30%;">绑定业务收费</label>
+            <div class="layui-input-block layui-form" lay-filter="group">
+                <select name="serviceId" placeholder="绑定业务收费" class="seloption"
+                        lay-verType="tips" lay-search>
+
+                </select>
+            </div>
+        </div>
+        <div class="layui-form-item" style="width:97%;">
+            <label class="layui-form-label layui-form-required">服务项目</label>
+            <div class="layui-input-block">
+                <table class="layui-table">
+                    <thead>
+                    <tr>
+                        <th>服务名称</th>
+                        <th>单价/年或月</th>
+                        <th>备注</th>
+                        <th>操作</th>
+                    </tr>
+                    </thead>
+                    <tbody id="service-table">
+                    <tr>
+                        <td colspan="4" style="text-align: center;"><span style="color:blue;"
+                                                                          onclick="addtr(this)">增加一行</span></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+       <!-- <div class="layui-form-item" style="display: inline-block;width:32%;">
+            <label class="layui-form-label">合同状态</label>
+            <div class="layui-input-block">
+                <select name="status" class="layui-select"
+                        lay-verType="tips" >
+                    <option value="">请选择合同状态</option>
+                    <option value="0">新签</option>
+                    <option value="1">续签</option>
+                    <option value="2">服务中</option>
+                    <option value="3">服务完成</option>
+                    <option value="4">停止服务</option>
+                    <option value="5">终止合同</option>
+                    <option value="6">注销合同</option>
+                </select>
+            </div>
+        </div>-->
+        <div class="layui-form-item" style="display: inline-block;width:32%;">
+            <label class="layui-form-label layui-form-required" style="padding: 9px 0;width:30%;">服务开始时间</label>
+            <div class="layui-input-block serviceStartTime">
+                <input name="serviceStartTime" onchange="updateInfo(this)" autocomplete="off" placeholder="请输入服务开始时间" class="layui-input"
+                       lay-verType="tips" lay-verify="required" required/>
+            </div>
+        </div>
+
+        <div class="layui-form-item" style="display: inline-block;width:32%;">
+            <label class="layui-form-label layui-form-required">服务月数</label>
+            <div class="layui-input-block">
+                <input id="serviceMonthly" name="serviceMonthly" autocomplete="off" onkeyup="updateInfo(this),jisuanzje()" placeholder="请输入服务月数" class="layui-input"
+                       lay-verType="tips" lay-verify="required" required/>
+            </div>
+        </div>
+
+        <div class="layui-form-item" style="display: inline-block;width:32%;">
+            <label class="layui-form-label layui-form-required" style="padding: 9px 0;width:30%;">服务结束时间</label>
+            <div class="layui-input-block serviceEndTime">
+                <input name="serviceEndTime" autocomplete="off" placeholder="请输入服务结束时间" class="layui-input"
+                       lay-verType="tips" lay-verify="required" required/>
+            </div>
+        </div>
+        <div class="layui-form-item" style="display: inline-block;width:32%;">
+            <label class="layui-form-label layui-form-required">结算方式</label>
+            <div class="layui-input-block">
+                <select name="chargingStandard" onchange="jisuanzje(this)"   class="layui-select"
+                        lay-verType="tips" lay-verify="required" required>
+                    <option value="">请选择结算方式</option>
+                    <option value="0">月</option>
+                    <option value="1">季</option>
+                    <option value="2">半年</option>
+                    <option value="3">年</option>
+                </select>
+            </div>
+        </div>
+        <div class="layui-form-item" style="display: inline-block;width:32%;">
+            <label class="layui-form-label layui-form-required">赠送月数</label>
+            <div class="layui-input-block">
+                <input name="giveMonthly" autocomplete="off" onkeyup="updateInfo(this)" lay-verify="required" required placeholder="请输入赠送月数" class="layui-input" lay-verType="tips"/>
+            </div>
+        </div>
+        <div class="layui-form-item" style="display: inline-block;width:32%;">
+            <label class="layui-form-label layui-form-required">支付方式</label>
+            <div class="layui-input-block">
+                <select name="payType" class="layui-select"
+                        lay-verType="tips" lay-verify="required" required>
+                    <option value="">请选择支付方式</option>
+                    <option value="0">微信</option>
+                    <option value="1">支付宝</option>
+                    <option value="2">现金</option>
+                    <option value="3">转账</option>
+                    <option value="4">刷卡</option>
+                </select>
+            </div>
+        </div>
+        <div class="layui-form-item" style="display: inline-block;width:32%;">
+            <label class="layui-form-label layui-form-required" style="padding: 9px 0;width:30%;">合同总金额</label>
+            <div class="layui-input-block">
+                <input onkeyup="jisuanzje()" name="amountMoney" placeholder="请输入合同总金额" class="layui-input"
+                       lay-verType="tips" lay-verify="required" required/>
+            </div>
+        </div>
+
+        <div class="layui-form-item" style="display: inline-block;width:32%;">
+            <label class="layui-form-label layui-form-required">优惠金额</label>
+            <div class="layui-input-block">
+                <input  name="discountMoney" onkeyup="jisuanss()" placeholder="请输入优惠金额" class="layui-input"
+                        lay-verType="tips" lay-verify="required" required/>
+            </div>
+        </div>
+
+        <div class="layui-form-item" style="display: inline-block;width:32%;">
+            <label class="layui-form-label layui-form-required">已收金额</label>
+            <div class="layui-input-block">
+                <input onkeyup="jsws()" name="amountReceived" placeholder="请输入已收金额" class="layui-input"
+                       lay-verType="tips" lay-verify="required" required/>
+            </div>
+        </div>
+
+
+        <div class="layui-form-item" style="display: inline-block;width:32%;">
+            <label class="layui-form-label layui-form-required">未收金额</label>
+            <div class="layui-input-block">
+                <input name="weishouMoney" readonly placeholder="请输入未收金额" class="layui-input"
+                       lay-verType="tips" lay-verify="required" required/>
+            </div>
+        </div>
+      <!--  <div class="layui-form-item">
+            <label class="layui-form-label layui-form-required">合同到期时间</label>
+            <div class="layui-input-block">
+                <input name="serviceTime" autocomplete="off" placeholder="请输入服务时间" class="layui-input"
+                       lay-verType="tips" lay-verify="required" required/>
+            </div>
+        </div>-->
+        <div class="layui-form-item" style="display: inline-block;width:32%;">
+            <label class="layui-form-label layui-form-required">签订时间</label>
+            <div class="layui-input-block">
+                <input name="signTime" autocomplete="off" placeholder="请选择合同签订时间" class="layui-input"
+                       lay-verType="tips" lay-verify="required" required/>
+            </div>
+        </div>
+
+
+
+       <div class="layui-form-item" style="display: inline-block;width:32%;">
+            <label class="layui-form-label layui-form-required">签订人</label>
+            <div class="layui-input-block layui-form" lay-filter="group">
+                <select name="signedBy" placeholder="请选择签订人" lay-search class="seloption"
+                        lay-verType="tips" lay-verify="required" required>
+
+                </select>
+            </div>
+        </div>
+        <div class="layui-form-item" style="display: inline-block;width:32%;">
+            <label class="layui-form-label layui-form-required">纳税性质</label>
+            <div class="layui-input-block">
+                <select name="contractNature" placeholder="请输入" class="layui-select"
+                        lay-verType="tips" lay-verify="required" required>
+                    <option value="">请选择纳税性质</option>
+                    <option value="0">小规模</option>
+                    <option value="1">一般纳税人</option>
+                    <option value="2">个体户</option>
+                    <option value="3">个体户一般纳税人</option>
+                </select>
+            </div>
+        </div>
+        <!--<div class="layui-form-item">
+            <label class="layui-form-label layui-form-required">发票开具</label>
+            <div class="layui-input-block">
+                <select name="isBill"  class="layui-select"
+                        lay-verType="tips" lay-verify="required" required>
+                    <option value="">请选择是否发票开具</option>
+                    <option value="0">是</option>
+                    <option value="1">否</option>
+                </select>
+            </div>
+        </div>-->
+
+
+        <div class="layui-form-item" style="display: inline-block;width:32%;">
+            <label class="layui-form-label">备注信息</label>
+            <div class="layui-input-block">
+                <input name="remark" placeholder="请直接输入备注信息" class="layui-input"
+                       lay-verType="tips"/>
+            </div>
+        </div>
+     <!--   <div class="layui-form-item">
+            <label class="layui-form-label layui-form-required">代账会计</label>
+            <div class="layui-input-block layui-form" lay-filter="group">
+                <select name="accounting" placeholder="请输入" class="seloption"
+                        lay-verType="tips" lay-verify="required" required></select>
+            </div>
+        </div>-->
+
+        <div class="layui-form-item text-right">
+            <button class="layui-btn" lay-filter="saveBtn" lay-submit>保存</button>
+            <button class="layui-btn layui-btn-primary" type="button" ew-event="closeDialog">取消</button>
+        </div>
+    </form>
+</script>
+
+
+<!--客户-->
+<!-- 表单弹窗 -->
+<script type="text/html" id="formDialog2">
+    <form id="dataForm2" lay-filter="dataForm2" class="layui-form model-form">
+        <input name="id" type="hidden"/>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label layui-form-required">公司名称</label>
+            <div class="layui-input-block">
+                <input name="corporateName" placeholder="请输入企业全称" class="layui-input"
+                       lay-verType="tips" lay-verify="required" required/>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label layui-form-required">社会统一信用码</label>
+            <div class="layui-input-block">
+                <input name="corporateId" placeholder="请输入统一信用码" class="layui-input"
+                       lay-verType="tips" lay-verify="required" required/>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label layui-form-required">法人</label>
+            <div class="layui-input-block">
+                <input name="corporationName" placeholder="请输入法人名称" class="layui-input"
+                       lay-verType="tips" lay-verify="required" required/>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label layui-form-required">电话号码</label>
+            <div class="layui-input-block">
+                <input name="phone" placeholder="请输入法人电话号码" class="layui-input"
+                       lay-verType="tips" lay-verify="required" required/>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label ">负责人</label>
+            <div class="layui-input-block">
+                <input name="personCharge" placeholder="请输入负责人名称" class="layui-input"
+                       lay-verType="tips"/>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label ">电话号码</label>
+            <div class="layui-input-block">
+                <input name="phone2" placeholder="请输入负责人号码" class="layui-input"
+                       lay-verType="tips"/>
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label layui-form-required">申报类型</label>
+            <div class="layui-input-block">
+                <select name="declareType" class="layui-select"
+                        lay-verType="tips" lay-verify="required" required>
+                    <option value="">请选择申报类型</option>
+                    <option value="0">零申报</option>
+                    <option value="1">非零申报</option>
+                </select>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label layui-form-required">纳税性质</label>
+            <div class="layui-input-block">
+                <select name="payTaxProperties" class="layui-select"
+                        lay-verType="tips" lay-verify="required" required>
+                    <option value="">请选择纳税性质</option>
+                    <option value="0">小规模</option>
+                    <option value="1">一般纳税人</option>
+                    <option value="2">个体</option>
+                    <option value="3">个体一般纳税人</option>
+                </select>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label layui-form-required">注册地址</label>
+            <div class="layui-input-block">
+                <input name="address" placeholder="请输入公司注册地址" class="layui-input"
+                       lay-verType="tips" lay-verify="required" required/>
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label layui-form-required">有无实体地址</label>
+            <div class="layui-input-block">
+                <select name="isAddres" onchange="(this)" class="layui-input"
+                        lay-verType="tips" lay-verify="required" required>
+                    <option value="">是否有无实体地址</option>
+                    <option value="0">无</option>
+                    <option value="1">有</option>
+                </select>
+            </div>
+        </div>
+        <div class="layui-form-item addres_detail" style="display: none;">
+            <label class="layui-form-label layui-form-required">具体地址</label>
+            <div class="layui-input-block">
+                <input name="addresDetail" placeholder="请输入具体地址" class="layui-input"
+                       lay-verType="tips"/>
+            </div>
+        </div>
+        <div class="layui-form-item">
+        <label class="layui-form-label layui-form-required">主营业务</label>
+        <div class="layui-input-block">
+            <input name="mainBusiness" placeholder="请输入主营业务" class="layui-input"
+                   lay-verType="tips" lay-verify="required" required/>
+        </div>
+    </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">税盘信息</label>
+            <div class="layui-input-block">
+                <input name="taxInfo" placeholder="请直接输入税盘包含信息例  账号:123456、密码:123456、口令:123456等其他信息" class="layui-input"
+                       lay-verType="tips"/>
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label layui-form-required">客户附件上传</label>
+            <div class="layui-input-block">
+                <div class="layui-upload">
+                    <div class="layui-input-block fujianBx" style="margin-left: 0;margin-bottom: 10px;">
+                        <button type="button" class="layui-btn layui-btn-normal testList" iflag="yyzz">营业执照</button>
+                        <button type="button" class="layui-btn layui-btn-normal testList" iflag="sfzzm">法人身份证复印件正面</button>
+                        <button type="button" class="layui-btn layui-btn-normal testList" iflag="sfzfm">法人身份证复印件反面</button>
+                        <button type="button" class="layui-btn layui-btn-normal testList" iflag="qyht">签约合同扫描件</button>
+                    </div>
+                    <div class="layui-input-block" style="margin-left: 0;">
+                        <button type="button" class="layui-btn layui-btn-normal testList" iflag="fcz">房产证</button>
+                        <button type="button" class="layui-btn layui-btn-normal testList" iflag="zlht">租赁合同</button>
+                        <button type="button" class="layui-btn layui-btn-normal testList" iflag="fdsfz">房东身份证复印件</button>
+                    </div>
+                    <div class="layui-upload-list">
+                        <table class="layui-table">
+                            <thead>
+                            <tr>
+                                <th>文件名</th>
+                                <th>状态</th>
+                                <th>操作</th>
+                            </tr>
+                            </thead>
+                            <tbody id="demoList"></tbody>
+                        </table>
+                    </div>
+                    <button type="button" class="layui-btn" style="display: none;" id="testListAction">开始上传</button>
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item text-right">
+            <button class="layui-btn" lay-filter="saveBtn2" lay-submit>保存</button>
+            <button class="layui-btn layui-btn-primary" type="button" ew-event="closeDialog">取消</button>
+        </div>
+    </form>
+</script>
+<!-- js部分 -->
+<div th:replace="common/scripts :: common"></div>
+<div th:replace="common/scripts :: custom"></div>
+<div>
+    <script>
+        //全局变量 Shiro权限
+        var shiroSave = false;
+        var shiroDelete = false;
+        var shiroUpdate = false;
+        var shiroInfo = false;
+        var shiroJiaojie = false;
+        var shirpShenpi = false;
+        var shirpPaigong=false;
+        var shirpglupdate=false;
+    </script>
+    <!-- 设置Shiro权限变量 -->
+    <shiro:hasAllPermissions name="contractInfo:save">
+        <script>shiroSave = true;</script>
+    </shiro:hasAllPermissions>
+    <shiro:hasAllPermissions name="contractInfo:delete">
+        <script>shiroDelete = true;</script>
+    </shiro:hasAllPermissions>
+    <shiro:hasAllPermissions name="contractInfo:update">
+        <script>shiroUpdate = true;</script>
+    </shiro:hasAllPermissions>
+    <shiro:hasAllPermissions name="contractInfo:jiaojie">
+        <script>shiroJiaojie = true;</script>
+    </shiro:hasAllPermissions>
+    <shiro:hasAllPermissions name="contractInfo:shenpi">
+        <script>shirpShenpi = true;</script>
+    </shiro:hasAllPermissions>
+    <shiro:hasAllPermissions name="contractInfo:paigong">
+        <script>shirpPaigong = true;</script>
+    </shiro:hasAllPermissions>
+    <shiro:hasAllPermissions name="contractInfo:xuqian">
+        <script>shirpXuqian = true;</script>
+    </shiro:hasAllPermissions>
+    <shiro:hasAllPermissions name="contractInfo:tingzhi">
+        <script>shirpTingzhi = true;</script>
+    </shiro:hasAllPermissions>
+    <shiro:hasAllPermissions name="contractInfo:glupdate">
+        <script>shirpglupdate = true;</script>
+    </shiro:hasAllPermissions>
+</div>
+<script>
+    layui.use(['layer', 'form', 'table', 'util', 'laydate', 'table', 'admin'], function () {
+        var $ = layui.jquery;
+        var layer = layui.layer;
+        var form = layui.form;
+        var table = layui.table;
+        var util = layui.util;
+        var laydate = layui.laydate;
+        var tableX = layui.tableX;
+        var admin = layui.admin;
+        var flagif=1;
+        if(localStorage.getItem("customerName")!=null&&localStorage.getItem("customerName")!=undefined&&localStorage.getItem("customerName")!="undefined"){
+            var customerName=localStorage.getItem("customerName");
+            localStorage.removeItem("customerName");
+            console.log(customerName)
+            flagif=2;
+            $("#customerName").val(customerName)
+        }
+
+        /* 渲染表格 */
+        var cols = [
+            {type: 'checkbox',fixed:true},
+            {field: 'customerName', title: '公司名称', align:"center",templet:function (d) {
+                return '<a href="javascript:void(0);" onclick="toDetail(\''+d.customerName+'\')">'+d.customerName+'</a>'
+                },width:190,fixed:true},
+            {field: 'contractId', title: '合同编号', templet: '#contractId3', align: 'center',width:150},
+           /* {field: 'serviceName', title: '服务业务', align: 'center'},*/
+            { title: '合同状态',templet: function (d) {
+                    var strs = [
+                        '<span class="layui-badge layui-badge-green">新签</span>',
+                        '<span class="layui-badge layui-badge-aquamarine">续签</span>',
+                        '<span class="layui-badge layui-badge-blue">服务中</span>',
+                        '<span class="layui-badge layui-badge-yellow">服务完成</span>',
+                        '<span class="layui-badge layui-badge-red">停止服务</span>',
+                        '<span class="layui-badge layui-badge-red">终止合同</span>',
+                        '<span class="layui-badge layui-badge-red">注销公司</span>'
+                    ];
+                    return strs[d.status];
+                }, align: 'center'},
+            {field: 'services', title: '服务项目', align: 'center'},
+            {
+                field: 'serviceTime',hide:true, title: '合同到期日期', templet: function (d) {
+                    return util.toDateString(d.serviceTime,"yyyy-MM-dd");
+                }, sort: true,width:130
+            },
+            {
+                field: 'serviceStartTime', title: '服务期间', templet: function (d) {
+                    return util.toDateString(d.serviceStartTime,"yyyy-MM-dd")+" ～ "+ util.toDateString(d.serviceEndTime,"yyyy-MM-dd");
+                }, sort: true,width:200
+            },
+            {field:"payType",hide:true,title:"支付方式",templet: function (d) {
+                    var strs = [
+                        '<span class="layui-badge layui-badge-green">微信</span>',
+                        '<span class="layui-badge layui-badge-blue">支付宝</span>',
+                        '<span class="layui-badge layui-badge-red">现金</span>',
+                        '<span class="layui-badge layui-badge-yellow">转账</span>',
+                        '<span class="layui-badge layui-badge-aliceBlue">刷卡</span>'
+                    ];
+                    return d.payType==null?"":strs[d.payType];
+                }, align: 'center'},
+            {field: 'amountMoney', title: '合同金额', align: 'center'},
+            {field: 'amountReceived', title: '已收金额', align: 'center'},
+            {field: 'weishouMoney', title: '未收金额', align: 'center'},
+            {field: 'discountMoney', title: '优惠金额', align: 'center'},
+            {field: 'thMoney', title: '退回金额', align: 'center'},
+            {field: 'backMoney', title: '使用退回金额',hide:true, align: 'center'},
+            {field: 'bushouMoney', title: '补收总金额',hide:true, align: 'center'},
+            {
+                field: 'signTime', title: '签订时间', templet: function (d) {
+                    return util.toDateString(d.signTime,"yyyy-MM-dd");
+                }, sort: true,width:120
+            },
+            {field: 'signedName', title: '签单人', align: 'center'},
+            { title: '结算方式',templet: function (d) {
+                    var strs = [
+                        '<span class="layui-badge layui-badge-green">月</span>',
+                        '<span class="layui-badge layui-badge-blue">季</span>',
+                        '<span class="layui-badge layui-badge-Aquamarine">半年</span>',
+                        '<span class="layui-badge layui-badge-yellow">年</span>'
+                    ];
+                    return strs[d.chargingStandard];
+                }, align: 'center'},
+            { title: '纳税性质',templet: function (d) {
+                    var strs = [
+                        '<span class="layui-badge layui-badge-green">小规模</span>',
+                        '<span class="layui-badge layui-badge-blue">一般纳税人</span>',
+                        '<span class="layui-badge layui-badge-yellow">个体户</span>',
+                        '<span class="layui-badge layui-badge-pink">个体户一般纳税人</span>'
+                    ];
+                    return strs[d.contractNature];
+                }, align: 'center'},
+            {field: 'isBill', title: '发票开具', templet: '#billStatus', sort: true, width: 100},
+            {field: 'accountingName', title: '代账会计', align: 'center'},
+            {field: 'levelName', hide:true,title: '会计星级', align: 'center'},
+            {field: 'remark', title: '备注信息', align: 'center'},
+            {title: '操作', toolbar: '#tableBar', align: 'center',fixed:"right", minWidth: 320}
+        ];
+
+        var statuss="0,1,2,"
+        laydate.render({
+            elem: 'input[name="dateRange"]',
+            type: 'date',
+            range: true,
+            trigger: 'click'
+        });
+        var supcurr=1;
+        var htcz=false;
+        if(localStorage.getItem("glBianhao")!=null&&localStorage.getItem("glBianhao")!=undefined&&localStorage.getItem("glBianhao")!="undefined"){
+            statuss="0,1,2,3,4,5,6"
+            var glBianhao=localStorage.getItem("glBianhao");
+            localStorage.removeItem("glBianhao");
+            htcz=true;
+            $("#contractId2").val(glBianhao)
+        }
+        if (localStorage.getItem("customerName")!=null&&localStorage.getItem("customerName")!=undefined&&localStorage.getItem("customerName")!="undefined"){
+            statuss="0,1,2,3,4,5,6";
+            var glBianhao=localStorage.getItem("customerName");
+            localStorage.removeItem("customerName");
+            htcz=true;
+            $("#customerName").val(glBianhao)
+
+        }
+
+        var tichengFlag=false;
+        var ids=null;
+        var tcType=0;
+        var statusFlag=false;
+        if(localStorage.getItem("tichengFlag")!=null&&localStorage.getItem("tichengFlag")!=undefined){
+            statuss="0,1,2,3,4,5,6";
+            tichengFlag=true;
+            tcType=localStorage.getItem("tcType");
+            ids=localStorage.getItem("tiId");
+            localStorage.removeItem("tiId");
+            localStorage.removeItem("tichengFlag")
+            localStorage.removeItem("tcType");
+        }
+
+        if(localStorage.getItem("status")!=null&&localStorage.getItem("status")!=undefined){
+            statuss=localStorage.getItem("status");
+            localStorage.removeItem("status");
+        }
+
+        $.ajax({
+            url:"contractInfo/userRoles/list",
+            data:{"roleId":"14"},
+            dataType:"json",
+            async:false,
+            type:"get",
+            success:function(res){
+                var userInfo="<option value=''>请选择代账会计</option>"
+                for(var i=0;i<res.data.length;i++){
+                    var user=res.data[i];
+                    userInfo+="<option value='"+user.id+"'>"+user.realname+"</option>"
+                }
+                $("[name='accounting3']").html("")
+                $("[name='accounting3']").append(userInfo);
+                form.render('select');
+            }
+        });
+
+
+        if(tichengFlag){
+            var insTb = table.render({
+                elem: '#dataTable',
+                url: 'contractInfo/page',
+                where: {"status": statuss,"tichengId":ids,"tcType":tcType},
+                page: true,
+                limit: 50,
+                limits: [10,20,30,40,50,5000],
+                height: 600,
+                toolbar: [shiroToolbar2(shiroSave, shiroDelete, shirpPaigong)].join(''),
+                cellMinWidth: 100,
+                cols: [cols],
+                done: function (res, curr, count) {
+                }
+            });
+
+        }else if(statusFlag){
+            var insTb = table.render({
+                elem: '#dataTable',
+                url: 'contractInfo/page',
+                where: {"status": statuss},
+                page: true,
+                limit: 50,
+                limits: [10,20,30,40,50,5000],
+                height: 600,
+                toolbar: [shiroToolbar2(shiroSave, shiroDelete, shirpPaigong)].join(''),
+                cellMinWidth: 100,
+                cols: [cols],
+                done: function (res, curr, count) {
+                }
+            });
+
+        }else  {
+
+            if (htcz) {
+                if ($("#contractId2").val() != "" && $("#contractId2").val() != null) {
+                    var insTb = table.render({
+                        elem: '#dataTable',
+                        url: 'contractInfo/page?contractId=' + $("#contractId2").val(),
+                        where: {"status": statuss},
+                        page: true,
+                        limit: 50,
+                        limits: [10,20,30,40,50,5000],
+                        height: 600,
+                        toolbar: [shiroToolbar2(shiroSave, shiroDelete, shirpPaigong)].join(''),
+                        cellMinWidth: 100,
+                        cols: [cols],
+                        done: function (res, curr, count) {
+                            flagif = 1;
+                            supcurr = curr;
+                            var info = null;
+                            if ($("[name='accounting3']").val() != "") {
+                                info = {"accounting": $("[name='accounting3']").val()}
+                            }
+                            // 绑定鼠标右键
+                            $.get("contractInfo/countCus", info, function (res) {
+                                console.log(res)
+                                $("[name='jzhs']").text(res.data.jzhs)
+                                $("[name='zc']").text(res.data.zc)
+                                $("[name='th']").text(res.data.th)
+                                $("[name='zx']").text(res.data.zx)
+                                $("[name='zz']").text(res.data.zz)
+                                $("[name='xgm']").text(res.data.xgm + "户");
+                                $("[name='ybnsr']").text(res.data.ybnsr + "户");
+                                $("[name='gth']").text(res.data.gth + "户");
+                                $("[name='gthnsr']").text(res.data.gthnsr + "户");
+                            })
+                        }
+                        /*tableX.bindCtxMenu('dataTable', shiroBindCtxMenu(shiroDelete, shiroUpdate));*/
+                    });
+                } else {
+                    var insTb = table.render({
+                        elem: '#dataTable',
+                        url: 'contractInfo/page?customerName=' + $("#customerName").val(),
+                        where: {"status": statuss},
+                        page: true,
+                        limit: 50,
+                        limits: [10,20,30,40,50,5000],
+                        height: 600,
+                        toolbar: [shiroToolbar2(shiroSave, shiroDelete, shirpPaigong)].join(''),
+                        cellMinWidth: 100,
+                        cols: [cols],
+                        done: function (res, curr, count) {
+                            flagif = 1;
+                            supcurr = curr;
+
+                            var info = null;
+                            if ($("[name='accounting3']").val() != "") {
+                                info = {"accounting": $("[name='accounting3']").val()}
+                            }
+                            // 绑定鼠标右键
+                            $.get("contractInfo/countCus", info, function (res) {
+                                console.log(res)
+                                $("[name='jzhs']").text(res.data.jzhs)
+                                $("[name='zc']").text(res.data.zc)
+                                $("[name='th']").text(res.data.th)
+                                $("[name='zx']").text(res.data.zx)
+                                $("[name='zz']").text(res.data.zz)
+                                $("[name='xgm']").text(res.data.xgm + "户");
+                                $("[name='ybnsr']").text(res.data.ybnsr + "户");
+                                $("[name='gth']").text(res.data.gth + "户");
+                                $("[name='gthnsr']").text(res.data.gthnsr + "户");
+                            })
+                        }
+                        /*tableX.bindCtxMenu('dataTable', shiroBindCtxMenu(shiroDelete, shiroUpdate));*/
+                    })
+                }
+            } else {
+                var insTb = table.render({
+                    elem: '#dataTable',
+                    url: flagif == 1 ? 'contractInfo/page' : 'contractInfo/page?customerName=' + customerName,
+                    where: {"status": statuss},
+                    page: true,
+                    height: 600,
+                    limit: 50,
+                    limits: [10,20,30,40,50,5000],
+                    toolbar: [shiroToolbar2(shiroSave, shiroDelete, shirpPaigong)].join(''),
+                    cellMinWidth: 100,
+                    cols: [cols],
+                    done: function (res, curr, count) {
+                        flagif = 1;
+                        supcurr = curr;
+                        console.log(supcurr);
+                        // 绑定鼠标右键
+
+                        var info = null;
+                        if ($("[name='accounting3']").val() != "") {
+                            info = {"accounting": $("[name='accounting3']").val()}
+                        }
+
+                        $.get("contractInfo/countCus", info, function (res) {
+                            console.log(res)
+                            $("[name='jzhs']").text(res.data.jzhs)
+                            $("[name='zc']").text(res.data.zc)
+                            $("[name='th']").text(res.data.th)
+                            $("[name='zx']").text(res.data.zx)
+                            $("[name='zz']").text(res.data.zz)
+                            $("[name='xgm']").text(res.data.xgm + "户");
+                            $("[name='ybnsr']").text(res.data.ybnsr + "户");
+                            $("[name='gth']").text(res.data.gth + "户");
+                            $("[name='gthnsr']").text(res.data.gthnsr + "户");
+                        })
+
+                        //tableX.bindCtxMenu('dataTable', shiroBindCtxMenu(shiroDelete, shiroUpdate));
+                    }
+                });
+            }
+        }
+        var contractNatureFlag=null;
+        /* 表格工具条点击事件 */
+        var cxqtFlag="1";
+        table.on('tool(dataTable)', function (obj) {
+            if (obj.event === 'edit') { // 修改
+                cxqtFlag="1";
+                showEditModel(obj.data);
+            } else if (obj.event === 'del') { // 删除
+                doDel(obj.data);
+            } else if (obj.event === 'reset') { // 重置密码
+                resetPsw(obj);
+            }else if(obj.event === 'jiaojie'){
+                showJiaojie(obj.data);
+            }else if(obj.event === 'shenpi'){
+                showShenpi(obj.data);
+            }else if(obj.event === 'paigong'){
+                showPaigong(obj.data);
+            }else if(obj.event === 'xuqian'){
+                cxqtFlag="4";
+                showXuqianModel(obj.data);
+            }else if(obj.event === 'tingzhi'){
+                showTingzhi(obj.data)
+            } else if(obj.event === 'cxtj'){
+                cxqtFlag="2";
+                showEditModel(obj.data);
+            }
+        });
+
+
+
+
+        /* 表格头工具栏点击事件 */
+        table.on('toolbar(dataTable)', function (obj) {
+            if (obj.event === 'add') { // 添加
+                cxqtFlag="0";
+                showEditModel();
+            } else if (obj.event === 'del') { // 删除
+                var checkRows = table.checkStatus('dataTable');
+                if (checkRows.data.length === 0) {
+                    layer.msg('请选择要删除的数据', {icon: 2});
+                    return;
+                }
+                var ids = checkRows.data.map(function (d) {
+                    return d.id;
+                });
+                doDel({ids: ids});
+            }else if(obj.event === 'tzht'){
+                statuss="3,4,5,6"
+                insTb.reload({where: {"status":statuss}, page: {curr: 1}});
+            }else if(obj.event === 'paigong'){
+                var checkRows = table.checkStatus('dataTable');
+                if (checkRows.data.length === 0) {
+                    layer.msg('请选择要派工的数据', {icon: 2});
+                    return;
+                }
+                var ids = checkRows.data.map(function (d) {
+                    return d.id;
+                });
+                showPaigong({ids: ids});
+            }else if(obj.event === 'bsfee'){
+                showBuShou();
+            }
+        });
+
+        var infoHtml = "";
+        $.ajax({
+            url: "/extend/settings/serviceSettings/list",
+            data:{"type":"0"},
+            dataType: "json",
+            async: false,
+            type: "get",
+            success: function (res) {
+                var userInfo = "<option value=\"\" style=\"display: none;\" disabled selected>请选择服务</option>";
+                for (var i = 0; i < res.data.length; i++) {
+                    var user = res.data[i];
+                    infoHtml += "<option  value='" + user.id + "'>" + user.serviceName + "</option>"
+                }
+            }
+        });
+
+        function showJiaojie(mData) {
+            console.log(supcurr);
+            admin.open({
+                type: 1,
+                area: '800px',
+                title: ('交接客户'),
+                content: $('#formDialog1').html(),
+                success: function (layero, dIndex) {
+                    form.val('dataForm1', mData);
+                    $("[name='other1']").val("")
+                    $("[name='remark']").val("");
+                    $("[name='other2']").val(mData.customerName)// 回显数据
+                    $.get("/extend/contract/contractInfo/userRoles/list",{"roleId":"14"},function (res) {
+                        var userInfo="<option value=''>请选择移交会计</option>"
+                        for(var i=0;i<res.data.length;i++){
+                            var user=res.data[i];
+                            userInfo+="<option value='"+user.id+"'>"+user.realname+"</option>"
+                        }
+                        $("[name='receiver']").html("")
+                        $("[name='receiver']").append(userInfo);
+                        form.render('select','group');
+                        console.log(res)
+                    });
+                    // 添加权限信息
+                    form.on('submit(saveBtn1)', function (data) {
+                        $.post( '/extend/record/handoverRecord/save' , data.field, function (res) {
+                            if (res.code == 0) {
+                                layer.close(dIndex);
+                                layer.msg(res.msg, {icon: 1});
+                                insTb.reload({where:{"status":statuss},page: {curr: supcurr}});
+                            } else {
+                                layer.msg(res.msg, {icon: 2});
+                            }
+                        }, 'json');
+                        return false;
+                    });
+                }
+            });
+        }
+
+        function showBuShou() {
+            admin.open({
+                type: 1,
+                area: ["70%", '70%'],
+                title: ('补收费用'),
+                content: $('#formDialog10').html(),
+                success: function (layero, dIndex) {
+                    form.render('select');
+                    form.on('submit(saveBtn10)', function (data) {
+                        $.post( 'contractInfo/bushouFee' , data.field, function (res) {
+                            if (res.code == 0) {
+                                layer.close(dIndex);
+                                layer.msg(res.msg, {icon: 1});
+                                insTb.reload({where : {"status":statuss},page: {curr: supcurr}});
+                            } else {
+                                layer.msg(res.msg, {icon: 2});
+                            }
+                        }, 'json');
+                        return false;
+                    });
+                }
+            });
+        }
+
+        function showTingzhi(mData) {
+            admin.open({
+                type: 1,
+                area: ["50%",'50%'],
+                title: ('停止服务'),
+                content: $('#formDialog7').html(),
+                success: function (layero, dIndex) {
+                    form.val('dataForm7', mData);
+
+                    laydate.render({
+                        elem: 'input[name="tingzhiTime"]' ,
+                        type: 'date',
+                        trigger: 'click'
+                    });
+                    form.on('submit(saveBtn7)', function (data) {
+                        $.post( 'contractInfo/tingzhi' , {"id":data.field.id,"status":$("[name='status']").val(),"remark":$("[name='remark2']").val(),"tingzhiTime":$("[name='tingzhiTime']").val()}, function (res) {
+                            if (res.code == 0) {
+                                layer.close(dIndex);
+                                layer.msg(res.msg, {icon: 1});
+                                insTb.reload({where : {"status":statuss},page: {curr: supcurr}});
+                            } else {
+                                layer.msg(res.msg, {icon: 2});
+                            }
+                        }, 'json');
+                        return false;
+                    });
+                }
+            });
+        }
+
+        function showPaigong(mData) {
+            admin.open({
+                type: 1,
+                area: ['40%','40%'],
+                title: ('派工'),
+                content: $('#formDialog8').html(),
+                success: function (layero, dIndex) {
+                    $.ajax({
+                        url:"contractInfo/userRoles/list",
+                        data:{"roleId":"14"},
+                        dataType:"json",
+                        async:false,
+                        type:"get",
+                        success:function(res){
+                            var userInfo="<option value=''>请选择代账会计</option>"
+                            for(var i=0;i<res.data.length;i++){
+                                var user=res.data[i];
+                                userInfo+="<option value='"+user.id+"'>"+user.realname+"</option>"
+                            }
+                            $("[name='accounting2']").html("")
+                            $("[name='accounting2']").append(userInfo);
+                            form.render('select');
+                        }
+                    });
+                    form.on('submit(saveBtn8)', function (data) {
+                        $.post( 'contractInfo/paigong' , {  id: mData ? mData.id : '',
+                            ids: mData.ids ? mData.ids.join(',') : '',"accounting":$("[name='accounting2']").val()}, function (res) {
+                            if (res.code == 0) {
+                                layer.close(dIndex);
+                                layer.msg(res.msg, {icon: 1});
+                                insTb.reload({where:{"status":statuss},page: {curr: supcurr}});
+                            } else {
+                                layer.msg(res.msg, {icon: 2});
+                            }
+                        }, 'json');
+                        return false;
+                    });
+                }
+            });
+        }
+
+        function showShenpi(mData) {
+            admin.open({
+                type: 1,
+                area: '800px',
+                title: ('交接审批'),
+                content: $('#formDialog5').html(),
+                success: function (layero, dIndex) {
+                console.log(mData);
+                var dataInfo=null;
+                    $.ajax({
+                        url:"/extend/record/handoverRecord/list",
+                        data:{"customerId":mData.customerId,"contractId":mData.id,"status":"0"},
+                        dataType:"json",
+                        async:false,
+                        type:"get",
+                        success:function(res){
+                            console.log(res);
+                            dataInfo=res.data[0];
+                        }
+                    });
+                    form.val('dataForm5', dataInfo);  // 回显数据
+                    $("[name='jjyy']").html(dataInfo.remark);
+                    $("[name='yjkj']").html(dataInfo.receiverName);
+                    // 添加权限信息
+                    form.on('submit(saveBtn5)', function (data) {
+                        $.post( '/extend/record/handoverRecord/update' , {"id":data.field.id,"status":"1","contractId":dataInfo.contractId,"receiver":dataInfo.receiver}, function (res) {
+                            if (res.code == 0) {
+                                layer.close(dIndex);
+                                layer.msg(res.msg, {icon: 1});
+                                insTb.reload({where:{"status":statuss},page: {curr: supcurr}});
+                            } else {
+                                layer.msg(res.msg, {icon: 2});
+                            }
+                        }, 'json');
+                        return false;
+                    });
+
+                    form.on('submit(saveBtn6)', function (data) {
+                        $.post( '/extend/record/handoverRecord/update' , {"id":data.field.id,"status":"2","contractId":dataInfo.contractId,"receiver":dataInfo.receiver}, function (res) {
+                            if (res.code == 0) {
+                                layer.close(dIndex);
+                                layer.msg(res.msg, {icon: 1});
+                                insTb.reload({where:{"status":statuss},page: {curr: supcurr}});
+                            } else {
+                                layer.msg(res.msg, {icon: 2});
+                            }
+                        }, 'json');
+                        return false;
+                    });
+                }
+            });
+        }
+
+        $('.showBtnColor').click(function (res) {
+            $(".showBtnColor").each(function () {
+                $(this).attr("style","background-color: white;color: black;border:1px black solid;")
+            })
+            $(this).removeAttr("style")
+
+            var flag=$(this).attr("flag");
+            var countPage=null;
+            var dateRange=$("[name='dateRange']").val();
+            var startDate=null;
+            var endDate=null;
+            if (dateRange!=""&&dateRange!=null) {
+                var searchDate = data.field.dateRange.split(' - ');
+                startDate = searchDate[0];
+                endDate = searchDate[1];
+            } else {
+                startDate = '';
+                endDate = '';
+            }
+                var data="";
+                var contractId=$("[name='contractId']").val();
+                var customerName=$("[name='customerName']").val();
+                if(startDate!=null&&startDate!=""){
+                    data+= "startDate="+startDate+"&"
+                }else  if(endDate!=null&&endDate!=""){
+                    data+= "endDate="+endDate+"&"
+                }else if(flag!=null&& flag!=""){
+                    data+= "contractNature="+flag+"&"
+                    contractNatureFlag=flag;
+                }else if(contractId!=null&& contractId!=""){
+                    data+= "contractId="+contractId+"&"
+                }else if(customerName!=null&& customerName!=""){
+                    data+= "customerName="+customerName+"&"
+                }
+                statuss="0,1,2"
+                var dataInfo= {"status":statuss,"startDate":startDate,"endDate":endDate,"contractNature":flag,"contractId":contractId,"customerName":customerName};
+            insTb.reload({where: dataInfo, page: {curr: 1}});
+
+
+        });
+
+        window.showContractId=function (res){
+
+            admin.open({
+                type: 1,
+                area: ['96%', '96%'],
+                offset: ['10px', '10px'],
+                title: ( '合同'),
+                content: $('#formDialog').html(),
+                success: function (layero, dIndex) {
+
+
+                    laydate.render({
+                        elem: 'input[name="serviceTime"]' ,
+                        type: 'date',
+                        trigger: 'click'
+                    });
+                    laydate.render({
+                        elem: 'input[name="serviceStartTime"]' ,
+                        type: 'date',
+                        trigger: 'click',
+                        done: function(value, date){ //监听日期被切换value
+                            var monthly=1;
+                            var giveMonthly=$("[name='giveMonthly']").val();
+                            var serviceMonthly=$("#serviceMonthly").val();
+                            if(serviceMonthly!=null&&serviceMonthly!=""){
+                                monthly=parseInt(serviceMonthly)
+                            }
+                            if(giveMonthly!=null&&giveMonthly!=""){
+                                monthly=parseInt(monthly)+ parseInt(giveMonthly);
+                            }
+                            var   now   =   new   Date(value);
+                            var newDate   =   addMonths(now ,monthly);
+                            $("[name='serviceEndTime']").val(util.toDateString(newDate,'yyyy-MM-dd'))
+                        }
+                    });
+                    laydate.render({
+                        elem: 'input[name="serviceEndTime"]' ,
+                        type: 'date',
+                        trigger: 'click'
+                    });
+                    laydate.render({
+                        elem: 'input[name="signTime"]' ,
+                        type: 'date',
+                        trigger: 'click'
+                    });
+
+                    $.ajax({
+                        url:"contractInfo/getContractId",
+                        /*data:{"roleId":"13"},*/
+                        dataType:"json",
+                        async:false,
+                        type:"get",
+                        success:function(res){
+                            $("#contractId").val(res.data)
+                        }
+                    });
+
+
+                    $.ajax({
+                        url:"/extend/customer/customerResearch/list",
+                        /*data:{"roleId":"13"},*/
+                        dataType:"json",
+                        async:false,
+                        type:"get",
+                        success:function(res){
+                            var userInfo=""
+                            for(var i=0;i<res.data.length;i++){
+                                var user=res.data[i];
+                                userInfo+="<option value='"+user.corporateName+"'>"
+                            }
+                            $("#customerList").html(userInfo)
+                            form.render('select','group');
+                        }
+                    });
+
+                    $.ajax({
+                        url:"contractInfo/userRoles/list",
+                        data:{"roleId":"14"},
+                        dataType:"json",
+                        async:false,
+                        type:"get",
+                        success:function(res){
+                            var userInfo="<option value=''>请选择代账会计</option>"
+                            for(var i=0;i<res.data.length;i++){
+                                var user=res.data[i];
+                                userInfo+="<option value='"+user.id+"'>"+user.realname+"</option>"
+                            }
+                            $("[name='accounting']").html("")
+                            $("[name='accounting']").append(userInfo);
+                            form.render('select','group');
+                        }
+                    });
+                    $.ajax({
+                        url:"contractInfo/userRoles/list",
+                        dataType:"json",
+                        async:false,
+                        type:"get",
+                        success:function(res){
+                            var userId=$("[name='userId']").val();
+                            var check="";
+                            var userInfo="<option value=''>请选择签订人</option>"
+                            for(var i=0;i<res.data.length;i++){
+                                var user=res.data[i];
+                                if(user==null||user==""){
+                                    continue;
+                                }
+                                if(userId!=""){
+                                    if(user.id==userId){
+                                        check="selected='selected'"
+                                    }else{
+                                        check=""}
+                                }
+                                userInfo+="<option value='"+user.id+"'  "+check+">"+user.realname+"</option>"
+                            }
+                            $("[name='signedBy']").html("")
+                            $("[name='signedBy']").append(userInfo);
+                            form.render('select','group');
+                        }
+                    });
+                    $.ajax({
+                        url:"/extend/customer/customerResearch/list",
+                        /*data:{"roleId":"13"},*/
+                        dataType:"json",
+                        async:false,
+                        type:"get",
+                        success:function(res){
+                            var userInfo="<option value=''>请选择客户名称</option>"
+                            for(var i=0;i<res.data.length;i++){
+                                var user=res.data[i];
+                                userInfo+="<option value='"+user.id+"'>"+user.corporateName+"</option>"
+                            }
+                            $("[name='customerId']").html("")
+                            $("[name='customerId']").append(userInfo);
+                            form.render('select','group');
+                        }
+                    });
+
+                    $.ajax({
+                        url:"/extend/business/businessCharges/list",
+                        dataType:"json",
+                        async:false,
+                        type:"get",
+                        success:function(res){
+                            var userInfo="<option value=''>请选择需要绑定的收费业务</option>"
+                            for(var i=0;i<res.data.length;i++){
+                                var user=res.data[i];
+                                userInfo+="<option value='"+user.id+"'>"+user.serviceId+"/"+user.customerName+"</option>"
+                            }
+                            $("[name='serviceId']").html("")
+                            $("[name='serviceId']").append(userInfo);
+                            form.render('select','group');
+                        }
+                    });
+                    var mData=null;
+                    $.ajax({
+                        url:"contractInfo/list",
+                        data:{"contractId":res,"status":"0,1,2,3,4,5,6"},
+                        dataType:"json",
+                        async:false,
+                        type:"get",
+                        success:function(res){
+                            mData=res.data.list[0];
+
+                        }
+                    });
+
+                    form.val('dataForm', mData);  // 回显数据
+                    if(mData){
+                        $("[name='serviceTime']").val(util.toDateString(mData.serviceTime, "yyyy-MM-dd"))
+                        $("[name='serviceStartTime']").val(util.toDateString(mData.serviceStartTime, "yyyy-MM-dd"))
+                        $("[name='serviceEndTime']").val(util.toDateString(mData.serviceEndTime, "yyyy-MM-dd"))
+                        $("[name='signTime']").val(util.toDateString(mData.signTime, "yyyy-MM-dd"));
+
+                        var list = mData.servicesList;
+                        var htmlInfo = "";
+                        for (var i = 0; i < list.length; i++) {
+                            var obgInfo = list[i];
+                            var opinInfo = "";
+                            $.ajax({
+                                url: "/extend/settings/serviceSettings/list",
+                                data:{"type":"0"},
+                                dataType: "json",
+                                async: false,
+                                type: "get",
+                                success: function (res) {
+                                    var userInfo = "<option value=\"\" style=\"display: none;\" disabled selected>请选择服务</option>";
+                                    for (var i = 0; i < res.data.length; i++) {
+                                        var user = res.data[i];
+                                        opinInfo += "<option " + (user.id == obgInfo.serviceId ? "selected" : "") + " value='" + user.id + "'>" + user.serviceName + "</option>"
+                                    }
+                                }
+                            });
+                            htmlInfo += "  <tr>\n" +
+                                "                        <td style=\"padding: 0;width: 220px\"><select name='service' class=\"layui-select\" style='display: inline-block;border:0;width: 200px;' lay-verType=\"tips\"   >" + opinInfo + "</select><i class=\"layui-icon layui-icon-down\"></i></td>\n" +
+                                "                        <td style=\"padding: 0;\"><input onkeyup=\"jisuanzje()\" type=\"text\"  required name='price' value='" + obgInfo.price + "' style='border: 0;' class=\"layui-input layui-form-required\" /></td>\n" +
+                                "                        <td style=\"padding: 0;\"><input type=\"text\" name='remark' value='" + obgInfo.remark + "' style='border: 0;' class=\"layui-input\" /></td>\n" +
+                                console.log(shiroSave)
+                            if((shirpglupdate!=null&&shirpglupdate)||(mData.other2!=null&&mData.other2!=1)) {
+                                htmlInfo+="                        <td style=\"padding: 0;text-align:center;\"><a href='javascript:void(0);' onclick='delThieTr2(this)'>删除</a></td>\n"+
+                                "               </tr>"
+                            }else{
+                                htmlInfo+="                        <td style=\"padding: 0;text-align:center;\"></td>\n"+
+                                    "               </tr>"
+                            }
+
+                        }
+
+                        if((shirpglupdate!=null&&shirpglupdate)||(mData.other2!=null&&mData.other2!=1)) {
+                            htmlInfo += "                    <tr>\n" +
+                                "                        <td colspan=\"4\" style=\"text-align: center;\"><span style=\"color:blue;\" onclick=\"addtr(this)\">增加一行</span></td>\n" +
+                                "                    </tr>";
+                        }
+
+                        $("#service-table").html(htmlInfo);
+                    }
+                    if(!shirpglupdate) {
+
+                        if(mData.other2==null||mData.other2==1){
+                            $("#dataForm").find("input").each(function (res) {
+                                $(this).attr("readonly", "readonly");
+                            })
+                            $("#dataForm").find("select").each(function (res) {
+                                $(this).attr("readonly", "readonly");
+                            })
+                            $("#dataForm").find(".text-right").hide();
+                        }
+                    }
+
+                    // 添加权限信息
+                    form.on('submit(saveBtn)', function (data) {
+                        var serList = new Array();
+                        var len = $("#service-table").find("tr").length;
+                        var iflag = true;
+                        if (len > 1) {
+                            $("#service-table").find("tr").each(function (res) {
+                                var ix = $(this).index();
+                                if (ix + 1 == len) {
+                                    return;
+                                }
+                                var serviceId = $(this).find("[name='service']").val()
+                                var price = $(this).find("[name='price']").val()
+                                var remark = $(this).find("[name='remark']").val()
+                                if (price == null || price == "") {
+                                    layer.open({
+                                        title: '错误提示'
+                                        , content: '请填写服务价格!'
+                                    });
+                                    iflag = false;
+                                    return false;
+                                }
+                                var obj = new Object();
+                                obj.serviceId = serviceId;
+                                obj.price = price;
+                                obj.remark = remark;
+                                serList.push(obj);
+                                console.log(remark)
+                            })
+                        } else {
+                            layer.open({
+                                title: '错误提示'
+                                , content: '请选择相关服务'
+                            });
+                            iflag = false;
+                        }
+                        if (!iflag) {
+                            return false;
+                        }
+                        data.field.services=JSON.stringify(serList);
+                        data.field.serviceTime=data.field.serviceEndTime;
+                        data.field.isBill=0;
+                            $.post('contractInfo/update' , data.field, function (res) {
+                                if (res.code == 0) {
+                                    layer.close(dIndex);
+                                    layer.msg(res.msg, {icon: 1});
+                                    insTb.reload({where:{"status":statuss},page: {curr: supcurr}});
+                                } else {
+                                    layer.msg(res.msg, {icon: 2});
+                                }
+                            }, 'json');
+
+                        return false;
+                    });
+
+
+                }
+            });
+        }
+
+        window.toContachInfo = function(res){
+            localStorage.setItem("status",res);
+            top.layui.index.openTab({
+                title: '合同列表',
+                url: '/extend/contract/contractinfo.html',
+                end: function() {
+                    // insTb.reload();
+                }
+            });
+        }
+
+        window.xuanzeRy = function(res){
+            alert($(res).val());
+        }
+
+        window.jisuanMoney=function (res){
+            var amountMoney=$("[name='amountMoney']").val();
+            var amountReceived=$("[name='amountReceived']").val();
+            var discountMoney=$("[name='discountMoney']").val();
+
+            if(amountMoney!=""&&amountReceived!=""){
+                var total=parseFloat(amountMoney)-parseFloat(amountReceived)
+                if(discountMoney!=""){
+                    total=parseFloat(total)-parseFloat(discountMoney)
+                }
+                if(0>total){
+                    $("[name='weishouMoney']").val(0);
+                }else {
+                    $("[name='weishouMoney']").val(total);
+                }
+
+            }
+        }
+        window.updateInfo = function (res) {
+            var monthly=0;
+            var giveMonthly=$("[name='giveMonthly']").val();
+            var serviceMonthly=$("#serviceMonthly").val();
+            var serviceStartTime=$("[name='serviceStartTime']").val();
+            if(serviceStartTime!=""&&serviceStartTime!=null) {
+                if (serviceMonthly != null && serviceMonthly != "") {
+                    monthly = parseInt(serviceMonthly)
+                }
+                if (giveMonthly != null && giveMonthly != "") {
+                    monthly = parseInt(monthly) + parseInt(giveMonthly);
+                }
+                var now = new Date(serviceStartTime);
+                var newDate = addMonths(now, monthly);
+                $("[name='serviceEndTime']").val(util.toDateString(newDate, 'yyyy-MM-dd'))
+            }
+        }
+
+        function addMonths(date, months) {
+
+            var d = date.getDate();
+
+            date.setMonth(date.getMonth()+ +months);
+
+            if (date.getDate() != d) {
+
+                date.setDate(0);
+
+            }else{
+                var num=parseInt(d)
+                var day=num-1;
+                date.setDate(date.getDate()-1);
+            }
+
+            return date;
+
+        }
+
+
+
+        function showXuqianModel(mData) {
+            admin.open({
+                type: 1,
+                area: ['96%', '96%'],
+                offset: ['10px', '10px'],
+                title: ('续签合同'),
+                content: $('#formDialog').html(),
+                success: function (layero, dIndex) {
+                    laydate.render({
+                        elem: 'input[name="serviceTime"]' ,
+                        type: 'date',
+                        trigger: 'click'
+                    });
+
+
+                    laydate.render({
+                        elem: 'input[name="signTime"]' ,
+                        type: 'date',
+                        trigger: 'click'
+                    });
+
+                    $.ajax({
+                        url:"/extend/customer/customerResearch/list",
+                        /*data:{"roleId":"13"},*/
+                        dataType:"json",
+                        async:false,
+                        type:"get",
+                        success:function(res){
+                            var userInfo=""
+                            for(var i=0;i<res.data.length;i++){
+                                var user=res.data[i];
+                                userInfo+="<option value='"+user.corporateName+"'>"
+                            }
+                            $("#customerList").html(userInfo)
+                        }
+                    });
+
+                    $.ajax({
+                        url:"contractInfo/userRoles/list",
+                        data:{"roleId":"14"},
+                        dataType:"json",
+                        async:false,
+                        type:"get",
+                        success:function(res){
+                            var userInfo="<option value=''>请选择代账会计</option>"
+                            for(var i=0;i<res.data.length;i++){
+                                var user=res.data[i];
+                                userInfo+="<option value='"+user.id+"'>"+user.realname+"</option>"
+                            }
+                            $("[name='accounting']").html("")
+                            $("[name='accounting']").append(userInfo);
+                        }
+                    });
+                    $.ajax({
+                        url:"/extend/customer/customerResearch/list",
+                        /*data:{"roleId":"13"},*/
+                        dataType:"json",
+                        async:false,
+                        type:"get",
+                        success:function(res){
+                            var userInfo="<option value=''>请选择客户名称</option>"
+                            for(var i=0;i<res.data.length;i++){
+                                var user=res.data[i];
+                                userInfo+="<option value='"+user.id+"'>"+user.corporateName+"</option>"
+                            }
+                            $("[name='customerId']").html("")
+                            $("[name='customerId']").append(userInfo);
+                        }
+                    });
+
+                    $.ajax({
+                        url:"/extend/business/businessCharges/list",
+                        dataType:"json",
+                        async:false,
+                        type:"get",
+                        success:function(res){
+                            var userInfo="<option value=''>请选择绑定的收费业务</option>"
+                            for(var i=0;i<res.data.length;i++){
+                                var user=res.data[i];
+                                userInfo+="<option value='"+user.id+"'>"+user.serviceId+"/"+user.customerName+"</option>"
+                            }
+                            $("[name='serviceId']").html("")
+                            $("[name='serviceId']").append(userInfo);
+
+                        }
+                    });
+                    $.ajax({
+                        url:"contractInfo/userRoles/list",
+                        dataType:"json",
+                        async:false,
+                        type:"get",
+                        success:function(res){
+                            var userId=$("[name='userId']").val();
+                            var check="";
+                            var userInfo="<option value=''>请选择签订人</option>"
+                            for(var i=0;i<res.data.length;i++){
+                                var user=res.data[i];
+                                if(user==null||user==""){
+                                    continue;
+                                }
+                                if(userId!=""){
+                                    if(user.id==userId){
+                                        check="selected='selected'"
+                                    }else{
+                                        check=""}
+                                }
+                                userInfo+="<option value='"+user.id+"'  "+check+">"+user.realname+"</option>"
+                            }
+                            $("[name='signedBy']").html("")
+                            $("[name='signedBy']").append(userInfo);
+                            form.render('select','group');
+                        }
+                    });
+
+                    $.ajax({
+                        url:"contractInfo/getContractId",
+                        /*data:{"roleId":"13"},*/
+                        dataType:"json",
+                        async:false,
+                        type:"get",
+                        success:function(res){
+                            $("#contractId").val(res.data)
+                        }
+                    });
+
+                    form.render('select');
+                    laydate.render({
+                        elem: 'input[name="serviceStartTime"]' ,
+                        type: 'date',
+                        trigger: 'click',
+                        min:mData.serviceEndTime,
+                        done: function(value, date){ //监听日期被切换value
+                            var monthly=1;
+                            var giveMonthly=$("[name='giveMonthly']").val();
+                            var serviceMonthly=$("#serviceMonthly").val();
+                            if(serviceMonthly!=null&&serviceMonthly!=""){
+                                monthly=parseInt(serviceMonthly)
+                            }
+                            if(giveMonthly!=null&&giveMonthly!=""){
+                                monthly=parseInt(monthly)+ parseInt(giveMonthly);
+                            }
+                            var   now   =   new   Date(value);
+                            var newDate   =   addMonths(now ,monthly);
+                            $("[name='serviceEndTime']").val(util.toDateString(newDate,'yyyy-MM-dd'))
+                        }
+                    });
+                    laydate.render({
+                        elem: 'input[name="serviceEndTime"]' ,
+                        type: 'date',
+                        trigger: 'click',
+                        min:mData.serviceEndTime
+                    });
+                    //form.val('dataForm', );  // 回显数据
+                    if(mData){
+                        $("[name='serviceTime']").val(util.toDateString(mData.serviceTime, "yyyy-MM-dd"))
+                        $("[name='serviceStartTime']").val(util.toDateString(mData.serviceEndTime, "yyyy-MM-dd"))
+                        //$("[name='signTime']").val(util.toDateString(mData.serviceEndTime, "yyyy-MM-dd"))
+                        //$("[name='id']").val(mData.id);
+                      /*  if(mData.serviceMonthly!=null&&mData.serviceMonthly!=0&&mData.serviceMonthly!=""){
+                            var newDate=addMonths(new Date(mData.serviceEndTime),mData.serviceMonthly);
+                            $("[name='serviceEndTime']").val(util.toDateString(newDate, "yyyy-MM-dd"))
+                        }*/
+                        $("[name='signedBy']").val(mData.signedBy);
+                        $("[name='serviceMonthly]").val(mData.serviceMonthly)
+                        $("[name='customerName']").val(mData.customerName);
+
+                        $("[name='contractId']").parents(".layui-form-item").after(" <div class=\"layui-form-item\" style=\"display: inline-block;width: 32%;\">\n" +
+                            "            <label class=\"layui-form-label layui-form-required\">历史合同</label>\n" +
+                            "            <div class=\"layui-input-block\">\n" +
+                            "                <a href=\"javascript:void(0);\" onclick=\"cklshiht('"+mData.customerName+"')\"><input  disabled class=\"layui-input\"\n" +
+                            "                       lay-verType=\"tips\" lay-verify=\"required\"   value='"+mData.contractId+"' required/>\n" +
+                            "            </div>\n" +
+                            "        </div>");
+                        /*else{
+                            $("[name='serviceEndTime']").val("")
+                        }*/
+                      /*  $("[name='contractNature']").val("");
+                        $("[name='signTime']").val("");
+                        $("[name='chargingStandard']").val("");
+                        $("[name='payType']").val("")
+                        $("[name='giveMonthly']").val(0);
+                        $("[name='discountMoney']").val(0);
+                        $("[name='amountReceived']").val(0);
+                        $("[name='weishouMoney']").val(0);
+                        $("[name='discountMoney']").val(0)*/
+                        var list = mData.servicesList;
+                        var htmlInfo = "";
+                        var totalPrice=0;
+                        for (var i = 0; i < list.length; i++) {
+                            var obgInfo = list[i];
+                            var opinInfo = "";
+                            $.ajax({
+                                url: "/extend/settings/serviceSettings/list",
+                                data:{"type":"0"},
+                                dataType: "json",
+                                async: false,
+                                type: "get",
+                                success: function (res) {
+                                    var userInfo = "<option value=\"\" style=\"display: none;\" disabled selected>请选择服务</option>";
+                                    for (var i = 0; i < res.data.length; i++) {
+                                        var user = res.data[i];
+                                        opinInfo += "<option " + (user.id == obgInfo.serviceId ? "selected" : "") + " value='" + user.id + "'>" + user.serviceName + "</option>"
+                                    }
+                                }
+                            });
+                            htmlInfo += "  <tr>\n" +
+                                "                        <td style=\"padding: 0;width: 220px\"><select name='service' class=\"layui-select\" lay-verify=\"required\" required style='display: inline-block;border:0;width: 200px;' lay-verType=\"tips\"   >" + opinInfo + "</select><i class=\"layui-icon layui-icon-down\"></i></td>\n" +
+                                "                        <td style=\"padding: 0;\"><input onkeyup='jisuanzje(this)' type=\"text\" lay-verify=\"required\"  required name='price' value='" + obgInfo.price + "' style='border: 0;' class=\"layui-input layui-form-required\" /></td>\n" +
+                                "                        <td style=\"padding: 0;\"><input type=\"text\" name='remark' value='" + obgInfo.remark + "' style='border: 0;' class=\"layui-input\" /></td>\n" +
+                                "                        <td style=\"padding: 0;text-align:center;\"><a href='javascript:void(0);' onclick='delThieTr(this)'>删除</a></td>\n" +
+                                "               </tr>";
+                            totalPrice=parseFloat(totalPrice)+parseFloat(obgInfo.price);
+                        }
+                        $("[name='amountMoney']").val(totalPrice)
+                        htmlInfo += "                    <tr>\n" +
+                            "                        <td colspan=\"4\" style=\"text-align: center;\"><span style=\"color:blue;\" onclick=\"addtr(this)\">增加一行</span></td>\n" +
+                            "                    </tr>"
+                        $("#service-table").html(htmlInfo);
+                    }
+
+                    // 添加权限信息
+                    form.on('submit(saveBtn)', function (data) {
+                        var serList = new Array();
+                        var len = $("#service-table").find("tr").length;
+                        var iflag = true;
+                        if (len > 1) {
+                            $("#service-table").find("tr").each(function (res) {
+                                var ix = $(this).index();
+                                if (ix + 1 == len) {
+                                    return;
+                                }
+                                var serviceId = $(this).find("[name='service']").val()
+                                var price = $(this).find("[name='price']").val()
+                                var remark = $(this).find("[name='remark']").val()
+                                if (price == null || price == "") {
+                                    layer.open({
+                                        title: '错误提示'
+                                        , content: '请填写服务价格!'
+                                    });
+                                    iflag = false;
+                                    return false;
+                                }
+                                var obj = new Object();
+                                obj.serviceId = serviceId;
+                                obj.price = price;
+                                obj.remark = remark;
+                                serList.push(obj);
+                                console.log(remark)
+                            })
+                        } else {
+                            layer.open({
+                                title: '错误提示'
+                                , content: '请选择相关服务'
+                            });
+                            iflag = false;
+                        }
+                        if (!iflag) {
+                            return false;
+                        }
+                        data.field.services=JSON.stringify(serList);
+                        data.field.serviceTime=data.field.serviceEndTime;
+                        data.field.isBill=0;
+                        if(mData.accounting!=""&&mData.accounting!=null){
+                            data.field.accounting=mData.accounting
+                        }
+
+                        $.post( 'contractInfo/xuqian', data.field, function (res) {
+                            if (res.code == 0) {
+                                layer.close(dIndex);
+                                layer.msg(res.msg, {icon: 1});
+                                statuss="0,1,2"
+                                insTb.reload({where:{'status':statuss},page: {curr: supcurr}});
+                            } else {
+                                layer.msg(res.msg, {icon: 2});
+                            }
+                        }, 'json');
+                        return false;
+                    });
+                }
+            });
+        }
+
+        window.cklshiht = function (customerName){
+            localStorage.setItem("customerName",customerName);
+            top.layui.index.openTab({
+                title: '合同信息',
+                url: '/extend/contract/contractinfo.html',
+                end: function() {
+                    // insTb.reload();
+                }
+            });
+        }
+
+        window.huoqushijian = function (res) {
+            if($(res).val()=="") {
+                $("[name='backMoney']").parents(".layui-form-item").remove();
+                return false;
+            }
+            if (cxqtFlag == "0") {
+                var customerName = $(res).val();
+                $.ajax({
+                    url: "contractInfo/listInfo",
+                    data: {"customerName": customerName,"status":"0,1,2"},
+                    dataType: "json",
+                    async: false,
+                    type: "get",
+                    success: function (res) {
+
+                        if(res.data.list.length>0){
+                            $(".serviceStartTime").html("<input name=\"serviceStartTime\" onchange=\"updateInfo(this)\" autocomplete=\"off\" placeholder=\"请输入服务开始时间\" class=\"layui-input\"\n" +
+                                "            lay-verType=\"tips\" lay-verify=\"required\" required/>")
+
+                            $(".serviceEndTime").html("<input name=\"serviceEndTime\" autocomplete=\"off\" placeholder=\"请输入服务结束时间\" class=\"layui-input\"\n" +
+                                "                       lay-verType=\"tips\" lay-verify=\"required\" required/>")
+                            var info = res.data.list[0];
+                            laydate.render({
+                                elem: 'input[name="serviceStartTime"]',
+                                type: 'date',
+                                trigger: 'click',
+                                min: info.serviceEndTime
+                            });
+                            laydate.render({
+                                elem: 'input[name="serviceEndTime"]',
+                                type: 'date',
+                                trigger: 'click',
+                                min: info.serviceEndTime
+                            });
+
+
+                        }else{
+                            $(".serviceStartTime").html("<input name=\"serviceStartTime\" onchange=\"updateInfo(this)\" autocomplete=\"off\" placeholder=\"请输入服务开始时间\" class=\"layui-input\"\n" +
+                                "            lay-verType=\"tips\" lay-verify=\"required\" required/>")
+
+                            $(".serviceEndTime").html("<input name=\"serviceEndTime\" autocomplete=\"off\" placeholder=\"请输入服务结束时间\" class=\"layui-input\"\n" +
+                                "                       lay-verType=\"tips\" lay-verify=\"required\" required/>")
+                            laydate.render({
+                                elem: 'input[name="serviceStartTime"]',
+                                type: 'date',
+                                trigger: 'click'
+                            });
+                            laydate.render({
+                                elem: 'input[name="serviceEndTime"]',
+                                type: 'date',
+                                trigger: 'click'
+                            });
+                        }
+                        if(res.data.backFlag=="true"){
+                            if($("[name='backMoney']").length>0){
+                                $("[name='backMoney]").val(res.data.backMoney)
+                            }else {
+                                $("[name='discountMoney']").parents(".layui-form-item").before("<div class=\"layui-form-item\" style=\"display: inline-block;width:32%;\">\n" +
+                                    "            <label class=\"layui-form-label layui-form-required\">停止退回金额</label>\n" +
+                                    "            <div class=\"layui-input-block\">\n" +
+                                    "                <input  name=\"backMoney\" placeholder=\"请输入停止退回金额\" value='" + res.data.backMoney + "' readonly class=\"layui-input\"\n" +
+                                    "                        lay-verType=\"tips\" lay-verify=\"required\" required/>\n" +
+                                    "            </div>\n" +
+                                    "        </div>")
+                            }
+                        }else{
+                            $("[name='backMoney']").parents(".layui-form-item").remove();
+                        }
+
+
+                    }
+                })
+            }
+        }
+        // 显示编辑弹窗
+        function showEditModel(mData) {
+            admin.open({
+                type: 1,
+                area: ['96%', '96%'],
+                offset: ['10px', '10px'],
+                title: (mData ? '修改合同' : '新增合同'),
+                content: $('#formDialog').html(),
+                success: function (layero, dIndex) {
+
+                    laydate.render({
+                        elem: 'input[name="serviceTime"]' ,
+                        type: 'date',
+                        trigger: 'click'
+                    });
+                    laydate.render({
+                        elem: 'input[name="serviceStartTime"]' ,
+                        type: 'date',
+                        trigger: 'click',
+                        done: function(value, date){ //监听日期被切换value
+                            var monthly=1;
+                            var giveMonthly=$("[name='giveMonthly']").val();
+                            var serviceMonthly=$("#serviceMonthly").val();
+                            if(serviceMonthly!=null&&serviceMonthly!=""){
+                                monthly=parseInt(serviceMonthly)
+                            }
+                            if(giveMonthly!=null&&giveMonthly!=""){
+                                monthly=parseInt(monthly)+ parseInt(giveMonthly);
+                            }
+                            var   now   =   new   Date(value);
+                            var newDate   =   addMonths(now ,monthly);
+                            $("[name='serviceEndTime']").val(util.toDateString(newDate,'yyyy-MM-dd'))
+                        }
+                    });
+                    laydate.render({
+                        elem: 'input[name="serviceEndTime"]' ,
+                        type: 'date',
+                        trigger: 'click'
+                    });
+                    laydate.render({
+                        elem: 'input[name="signTime"]' ,
+                        type: 'date',
+                        trigger: 'click'
+                    });
+
+                    $.ajax({
+                        url:"contractInfo/getContractId",
+                        /*data:{"roleId":"13"},*/
+                        dataType:"json",
+                        async:false,
+                        type:"get",
+                        success:function(res){
+                            $("#contractId").val(res.data)
+                        }
+                    });
+
+                    $.ajax({
+                        url:"/extend/customer/customerResearch/list",
+                        /*data:{"roleId":"13"},*/
+                        dataType:"json",
+                        async:false,
+                        type:"get",
+                        success:function(res){
+                            var userInfo=""
+                            for(var i=0;i<res.data.length;i++){
+                                var user=res.data[i];
+                                userInfo+="<option value='"+user.corporateName+"'>"
+                            }
+                            $("#customerList").html(userInfo)
+                            form.render('select','group');
+                        }
+                    });
+
+                   $.ajax({
+                        url:"contractInfo/userRoles/list",
+                        dataType:"json",
+                        async:false,
+                        type:"get",
+                        success:function(res){
+                            var userId=$("[name='userId']").val();
+                            var check="";
+                            var userInfo="<option value=''>请选择签订人</option>"
+                            for(var i=0;i<res.data.length;i++){
+                                var user=res.data[i];
+                                if(user==null||user==""){
+                                    continue;
+                                }
+                                if(userId!=""){
+                                    if(user.id==userId){
+                                        check="selected='selected'"
+                                    }else{
+                                        check=""}
+                                }
+                                userInfo+="<option value='"+user.id+"'  "+check+">"+user.realname+"</option>"
+                            }
+                            $("[name='signedBy']").html("")
+                            $("[name='signedBy']").append(userInfo);
+                            form.render('select','group');
+                        }
+                    });
+                    $.ajax({
+                        url:"contractInfo/userRoles/list",
+                        data:{"roleId":"14"},
+                        dataType:"json",
+                        async:false,
+                        type:"get",
+                        success:function(res){
+                            var userInfo="<option value=''>请选择代账会计</option>"
+                            for(var i=0;i<res.data.length;i++){
+                                var user=res.data[i];
+                                userInfo+="<option value='"+user.id+"'>"+user.realname+"</option>"
+                            }
+                            $("[name='accounting']").html("")
+                            $("[name='accounting']").append(userInfo);
+                            form.render('select','group');
+                        }
+                    });
+                    $.ajax({
+                        url:"/extend/customer/customerResearch/list",
+                        /*data:{"roleId":"13"},*/
+                        dataType:"json",
+                        async:false,
+                        type:"get",
+                        success:function(res){
+                            var userInfo="<option value=''>请选择客户名称</option>"
+                            for(var i=0;i<res.data.length;i++){
+                                var user=res.data[i];
+                                userInfo+="<option value='"+user.id+"'>"+user.corporateName+"</option>"
+                            }
+                            $("[name='customerId']").html("")
+                            $("[name='customerId']").append(userInfo);
+                            form.render('select','group');
+                        }
+                    });
+
+                    $.ajax({
+                        url:"/extend/business/businessCharges/list",
+                        dataType:"json",
+                        async:false,
+                        type:"get",
+                        success:function(res){
+                            var userInfo="<option value=''>请选择需要绑定的收费业务</option>"
+                            for(var i=0;i<res.data.length;i++){
+                                var user=res.data[i];
+                                userInfo+="<option value='"+user.id+"'>"+user.serviceId+"/"+user.customerName+"</option>"
+                            }
+                            $("[name='serviceId']").html("")
+                            $("[name='serviceId']").append(userInfo);
+                            form.render('select','group');
+                        }
+                    });
+
+                    /*     $.ajax({
+                             url:"/extend/settings/serviceSettings/list",
+                             dataType:"json",
+                             async:false,
+                             type:"get",
+                             success:function(res){
+                                 var userInfo="";
+                                 for(var i=0;i<res.data.length;i++){
+                                     var user=res.data[i];
+                                     if(mData!=null&&mData.services!=null){
+                                         userInfo += "<input type=\"checkbox\" name=\"service\"  "+(mData.services.indexOf(user.id)!=-1?"checked":'')+" value='" + user.id + "' title=\"" + user.serviceName + "\" lay-skin=\"primary\">"
+                                     }else {
+                                         userInfo += "<input type=\"checkbox\" name=\"service\" value='" + user.id + "' title=\"" + user.serviceName + "\" lay-skin=\"primary\">"
+                                     }
+                                 }
+                                 $(".fuwuInfo").html(userInfo)
+                             }
+                         });*/
+
+                    form.val('dataForm', mData);  // 回显数据
+                    if(mData){
+                        $("[name='serviceTime']").val(util.toDateString(mData.serviceTime, "yyyy-MM-dd"))
+                        $("[name='serviceStartTime']").val(util.toDateString(mData.serviceStartTime, "yyyy-MM-dd"))
+                        $("[name='serviceEndTime']").val(util.toDateString(mData.serviceEndTime, "yyyy-MM-dd"))
+                        $("[name='signTime']").val(util.toDateString(mData.signTime, "yyyy-MM-dd"));
+
+                        var list = mData.servicesList;
+                        var htmlInfo = "";
+                        for (var i = 0; i < list.length; i++) {
+                            var obgInfo = list[i];
+                            var opinInfo = "";
+                            $.ajax({
+                                url: "/extend/settings/serviceSettings/list",
+                                data:{"type":"0"},
+                                dataType: "json",
+                                async: false,
+                                type: "get",
+                                success: function (res) {
+                                    var userInfo = "<option value=\"\" style=\"display: none;\" disabled selected>请选择服务</option>";
+                                    for (var i = 0; i < res.data.length; i++) {
+                                        var user = res.data[i];
+                                        opinInfo += "<option " + (user.id == obgInfo.serviceId ? "selected" : "") + " value='" + user.id + "'>" + user.serviceName + "</option>"
+                                    }
+                                }
+                            });
+                            htmlInfo += "  <tr>\n" +
+                                "                        <td style=\"padding: 0;width: 220px\"><select name='service' class=\"layui-select\" style='display: inline-block;border:0;width: 200px;' lay-verType=\"tips\"   >" + opinInfo + "</select><i class=\"layui-icon layui-icon-down\"></i></td>\n" +
+                                "                        <td style=\"padding: 0;\"><input onkeyup=\"jisuanzje()\" type=\"text\"  required name='price' value='" + obgInfo.price + "' style='border: 0;' class=\"layui-input layui-form-required\" /></td>\n" +
+                                "                        <td style=\"padding: 0;\"><input type=\"text\" name='remark' value='" + obgInfo.remark + "' style='border: 0;' class=\"layui-input\" /></td>\n" +
+                                "                        <td style=\"padding: 0;text-align:center;\"><a href='javascript:void(0);' onclick='delThieTr(this)'>删除</a></td>\n" +
+                                "               </tr>"
+                        }
+                        htmlInfo += "                    <tr>\n" +
+                            "                        <td colspan=\"4\" style=\"text-align: center;\"><span style=\"color:blue;\" onclick=\"addtr(this)\">增加一行</span></td>\n" +
+                            "                    </tr>"
+                        $("#service-table").html(htmlInfo);
+                    }
+
+
+                    /*if(mData) {
+
+                        var list=mData.servicesList;
+                        var htmlInfo="";
+                        for(var i=0;i<list.length;i++){
+                            var obgInfo=list[i];
+                            var opinInfo="";
+                            $.ajax({
+                                url:"/extend/settings/serviceSettings/list",
+                                dataType:"json",
+                                async:false,
+                                type:"get",
+                                success:function(res){
+                                    var userInfo="<option value=\"\" style=\"display: none;\" disabled selected>请选择服务</option>";
+                                    for(var i=0;i<res.data.length;i++){
+                                        var user=res.data[i];
+                                        opinInfo+="<option "+(user.id==obgInfo.serviceId?"selected":"")+" value='"+user.id+"'>"+user.serviceName+"</option>"
+                                    }
+                                }
+                            });
+                            htmlInfo+="  <tr>\n" +
+                                "                        <td style=\"padding: 0;width: 220px\"><select name='service' class=\"layui-select\" style='display: inline-block;border:0;width: 200px;' lay-verType=\"tips\"    >"+opinInfo+"</select><i class=\"layui-icon layui-icon-down\"></i></td>\n" +
+                                "                        <td style=\"padding: 0;\"><input type=\"text\" name='price' value='"+obgInfo.price+"' style='border: 0;' class=\"layui-input\" /></td>\n" +
+                                "                        <td style=\"padding: 0;\"><input type=\"text\" name='remark' value='"+obgInfo.remark+"' style='border: 0;' class=\"layui-input\" /></td>\n" +
+                                "                    </tr>"
+                        }
+                        htmlInfo+="                    <tr>\n" +
+                            "                        <td colspan=\"3\" style=\"text-align: center;\"><span style=\"color:blue;\" onclick=\"addtr(this)\">增加一行</span></td>\n" +
+                            "                    </tr>"
+                        $("#service-table").html(htmlInfo);
+                    }*/
+                    // 添加权限信息
+                    form.on('submit(saveBtn)', function (data) {
+                        var serList = new Array();
+                        var len = $("#service-table").find("tr").length;
+                        var iflag = true;
+                        if (len > 1) {
+                            $("#service-table").find("tr").each(function (res) {
+                                var ix = $(this).index();
+                                if (ix + 1 == len) {
+                                    return;
+                                }
+                                var serviceId = $(this).find("[name='service']").val()
+                                var price = $(this).find("[name='price']").val()
+                                var remark = $(this).find("[name='remark']").val()
+                                if (price == null || price == "") {
+                                    layer.open({
+                                        title: '错误提示'
+                                        , content: '请填写服务价格!'
+                                    });
+                                    iflag = false;
+                                    return false;
+                                }
+                                var obj = new Object();
+                                obj.serviceId = serviceId;
+                                obj.price = price;
+                                obj.remark = remark;
+                                serList.push(obj);
+                                console.log(remark)
+                            })
+                        } else {
+                            layer.open({
+                                title: '错误提示'
+                                , content: '请选择相关服务'
+                            });
+                            iflag = false;
+                        }
+                        if (!iflag) {
+                            return false;
+                        }
+                        data.field.services=JSON.stringify(serList);
+                        data.field.serviceTime=data.field.serviceEndTime;
+                        data.field.isBill=0;
+                        if(cxqtFlag=="1"||cxqtFlag=="0") {
+                            $.post(mData ? 'contractInfo/update' : 'contractInfo/save', data.field, function (res) {
+                                if (res.code == 0) {
+                                    layer.close(dIndex);
+                                    layer.msg(res.msg, {icon: 1});
+                                    insTb.reload({where:{"status":statuss},page: {curr: supcurr}});
+                                } else {
+                                    layer.msg(res.msg, {icon: 2});
+                                }
+                            }, 'json');
+                        }else{
+                            $.post( 'contractInfo/cxtj', data.field, function (res) {
+                                if (res.code == 0) {
+                                    layer.close(dIndex);
+                                    layer.msg(res.msg, {icon: 1});
+                                    insTb.reload({where:{"status":statuss},page: {curr: supcurr}});
+                                } else {
+                                    layer.msg(res.msg, {icon: 2});
+                                }
+                            }, 'json');
+                        }
+                        return false;
+                    });
+                }
+            });
+        }
+
+        //修改发票状态
+        form.on('switch(editStateBtn)', function (obj) {
+            //管理员不让禁用
+            var loadIndex = layer.load(2);
+            $.post('contractInfo/updatefpStatus', {
+                id: obj.elem.value,
+                isBill: obj.elem.checked ? 1 : 0
+            }, function (res) {
+                layer.close(loadIndex);
+                if (res.code === 0) {
+                    layer.msg(res.msg, {icon: 1});
+                } else {
+                    layer.msg(res.msg, {icon: 2});
+                    $(obj.elem).prop('checked', !obj.elem.checked);
+                    form.render('checkbox');
+                }
+            }, 'json');
+        });
+
+        /* 表格搜索 */
+        form.on('submit(searchBtn)', function (data) {
+            if (data.field.dateRange) {
+                var searchDate = data.field.dateRange.split(' - ');
+                data.field.startDate = searchDate[0];
+                data.field.endDate = searchDate[1];
+            } else {
+                data.field.startDate = '';
+                data.field.endDate = '';
+            }
+            if(data.field.accounting3){
+                data.field.accounting=data.field.accounting3;
+            }else{
+                data.field.accounting=""
+            }
+
+           /* if(contractNatureFlag!=null&&contractNatureFlag!=""){
+                data.field.contractNature=contractNatureFlag;
+            }*/
+            if($("#contractId2").val()!=null&&$("#contractId2").val()!=""){
+                data.field.contractId=$("#contractId2").val();
+            }
+            data.field.dateRange = undefined;
+            insTb.reload({where: data.field, page: {curr: 1}});
+            return false;
+        });
+
+        /* 导出excel */
+        $('#exportBtn').click(function () {
+            var checkRows = table.checkStatus('dataTable');
+            if (checkRows.data.length === 0) {
+                layer.msg('请选择要导出的数据', {icon: 2});
+            } else {
+                tableX.exportDataX({
+                    cols: insTb.config.cols,
+                    data: checkRows.data,
+                    fileName: '导出数据'
+                });
+            }
+        });
+        var fujianList = new Array();
+        var yujianList = new Array();
+        var fuyinjList = new Array();
+        //客户新增
+
+
+        window.toDetail=function(id){
+           localStorage.setItem("customerId",id);
+            //location.href="/extend/customer/customerresearch.html"
+            top.layui.index.openTab({
+                title: '公司信息',
+                url: '/extend/customer/customerresearch.html',
+                end: function() {
+                    // insTb.reload();
+                }
+            });
+        }
+
+        window.jsws = function(obj){
+            var amountMoney=$("[name='amountMoney']").val();
+            var discountMoney=$("[name='discountMoney']").val();
+            var amountReceived= $("[name='amountReceived']").val();
+            if(amountMoney!=""&&amountMoney!=null){
+                if(discountMoney!=null&&discountMoney!=""){
+                    amountMoney=parseFloat(amountMoney)-parseFloat(discountMoney);
+                }
+
+                if(amountReceived!=null&&amountReceived!=""){
+                    amountMoney=parseFloat(amountMoney)-parseFloat(amountReceived);
+                }
+                $("[name='weishouMoney']").val(0>amountMoney?0:amountMoney);
+            }
+            //未收
+        }
+
+     /*   window.jisuanss = function(obj){
+            var amountMoney=$("[name='amountMoney']").val();
+            var discountMoney=$("[name='discountMoney']").val();
+            if(amountMoney!=null&&amountMoney!=""&&discountMoney!=null&&discountMoney!=""){
+                var total=parseFloat(amountMoney)-discountMoney
+                if($("[name='backMoney']").length>0){
+                   var backMoney=$("[name='backMoney']").val();
+                   total=total-backMoney;
+                }
+
+                $("[name='amountReceived']").val(0>total?0:total);
+            }
+
+        }*/
+
+        window.jisuanzje = function(obj){
+            var zje=0;
+            $("[name='price']").each(function (res) {
+                var price=$(this).val()
+                if(price!=""&&price!=null) {
+                    zje = parseFloat(price) + parseFloat(zje);
+                }
+            });
+            var serviceMonthly = $("[name='serviceMonthly']").val();
+            var chargingStandard=$("[name='chargingStandard']").val();
+            if(serviceMonthly!=""&&serviceMonthly!=null&&chargingStandard!=null&&chargingStandard!="") {
+                var fangshi=null;
+                switch(chargingStandard) {
+                    case "0":
+                        fangshi=1;
+                        break;
+                    case "1":
+                        fangshi=3;
+                        break;
+                    case "2":
+                        fangshi=6;
+                        break;
+                    case "3":
+                        fangshi=12;
+                        break;
+                }
+                var zts=0;
+                var dts=0;
+                if(parseInt(serviceMonthly)%fangshi!=0){
+                    dts=parseInt(serviceMonthly)%fangshi;
+                    zts=(parseInt(serviceMonthly)-dts)/fangshi;
+                }else{
+                    zts=parseInt(serviceMonthly)/fangshi;
+                }
+
+                var dje=(zje/fangshi).toFixed(2);
+
+                $("[name='amountMoney']").val(formatNum((zje*zts)+(dje*dts),1));
+
+            }else{
+                $("[name='amountMoney']").val(formatNum(zje,1));
+            }
+
+        };
+
+
+        formatNum = function(f, digit) {
+            var m = Math.pow(10, digit);
+            return (parseFloat(f * m, 10) / m).toFixed(2);
+        }
+
+        window.addtr = function(obj){
+
+            var idx=$(obj).parents("tbody").append("  <tr>\n" +
+                "                        <td style=\"padding: 0;width: 220px\"><select name='service' lay-verify=\"required\" required class=\"layui-select\" style='display: inline-block;border:0;width: 200px;' lay-verType=\"tips\"    >"+infoHtml+"</select><i class=\"layui-icon layui-icon-down\"></i></td>\n" +
+                "                        <td style=\"padding: 0;\"><input type=\"text\" lay-verify=\"required\" required name='price' onkeyup='jisuanzje(this)' style='border: 0;' class=\"layui-input\" /></td>\n" +
+                "                        <td style=\"padding: 0;\"><input type=\"text\" name='remark' style='border: 0;' class=\"layui-input\" /></td>\n" +
+                "                        <td style=\"padding: 0;text-align:center;\"><a href='javascript:void(0);' onclick='delThieTr(this)'>删除</a></td>\n" +
+                "                    </tr>\n" +
+                "                    <tr>\n" +
+                "                        <td colspan=\"4\" style=\"text-align: center;\"><span style=\"color:blue;\" onclick=\"addtr(this)\">增加一行</span></td>\n" +
+                "                    </tr>");
+            $(obj).parents("tr").remove();
+
+        }
+
+        window.delThieTr = function (obj) {
+            $(obj).parents("tr").remove();
+        }
+        /* 删除 */
+        window.doDel = function (obj) {
+            layer.confirm('确定要删除选中数据吗？', {
+                skin: 'layui-layer-admin',
+                shade: .1
+            }, function (i) {
+                layer.close(i);
+                var loadIndex = layer.load(2);
+                $.post('contractInfo/delete', {
+                    id: obj ? obj.id : '',
+                    ids: obj.ids ? obj.ids.join(',') : ''
+                }, function (res) {
+                    layer.close(loadIndex);
+                    if (res.code === 0) {
+                        layer.msg(res.msg, {icon: 1});
+                        insTb.reload({where:{"status":statuss},page: {curr: supcurr}});
+                    } else {
+                        layer.msg(res.msg, {icon: 2});
+                    }
+                }, 'json');
+            });
+        };
+        window.xiugaiKj = function (res) {
+            var flag=$(res).val()
+            if(flag==0){
+                $(".kjmc").show();
+            }else{
+                $(".kjmc").hide();
+            }
+        }
+    });
+
+</script>
+</body>
+</html>

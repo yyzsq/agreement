@@ -1,0 +1,197 @@
+{
+  "code": 0,
+  "msg": "",
+  "data": [
+    {
+      "name": "智慧交通",
+      "icon": "layui-icon layui-icon-senior",
+      "url": "",
+      "subMenus": [
+        {
+          "name": "智慧旅游",
+          "url": "http://49.7.123.0:81/achart/智慧交通/智慧旅游/index.html",
+          "icon": "layui-icon layui-icon-reduce-circle"
+        },
+        {
+          "name": "视频监控",
+          "url": "http://49.7.123.0:81/achart/智慧交通/视频监控/index.html",
+          "icon": "layui-icon layui-icon-404"
+        }, {
+          "name": "高速交通",
+          "url": "http://49.7.123.0:81/achart/智慧交通/高速交通/index.html",
+          "icon": "layui-icon layui-icon-unlink"
+        }
+      ]
+    },{
+      "name": "智慧物联",
+      "icon": "layui-icon layui-icon-headset",
+      "url": "",
+      "subMenus": [
+        {
+          "name": "物联网平台",
+          "url": "http://49.7.123.0:81/achart/智慧物联/物联网平台/index.html",
+          "icon": "layui-icon layui-icon-video"
+        },
+        {
+          "name": "车联网平台",
+          "url": "http://49.7.123.0:81/achart/智慧物联/车联网平台/index.html",
+          "icon": "layui-icon layui-icon-play"
+        }
+      ]
+    },
+    {
+      "name": "智慧城市",
+      "icon": "layui-icon layui-icon-headset",
+      "url": "",
+      "subMenus": [
+        {
+          "name": "智慧工地",
+          "url": "http://49.7.123.0:81/achart/智慧城市/智慧工地/index.html",
+          "icon": "layui-icon layui-icon-video"
+        },
+        {
+          "name": "通用模版",
+          "url": "http://49.7.123.0:81/achart/智慧城市/通用模板/index.html",
+          "icon": "layui-icon layui-icon-play"
+        }
+      ]
+    },
+    {
+      "name": "智慧政务",
+      "icon": "layui-icon layui-icon-util",
+      "url": "",
+      "subMenus": [
+        {
+          "name": "土地交易",
+          "url": "http://49.7.123.0:81/achart/智慧政务/土地交易/index.html",
+          "icon": "layui-icon layui-icon-set"
+        },
+        {
+          "name": "工商办税",
+          "url": "http://49.7.123.0:81/achart/智慧政务/工商办税/index.html",
+          "icon": "layui-icon layui-icon-set"
+        },
+        {
+          "name": "综合分析",
+          "url": "http://49.7.123.0:81/achart/智慧政务/综合分析/pages/index.html",
+          "icon": "layui-icon layui-icon-set"
+        },
+        {
+          "name": "舆情分析",
+          "url": "",
+          "icon": "layui-icon layui-icon-set",
+          "subMenus": [
+            {
+              "name": "活动分析",
+              "url": "http://49.7.123.0:81/achart/智慧政务/舆情分析/activity.html",
+              "icon": "layui-icon layui-icon-video"
+            },
+            {
+              "name": "矛盾纠纷",
+              "url": "http://49.7.123.0:81/achart/智慧政务/舆情分析/analysis.html",
+              "icon": "layui-icon layui-icon-play"
+            },
+            {
+              "name": "人口分析",
+              "url": "http://49.7.123.0:81/achart/智慧政务/舆情分析/people.html",
+              "icon": "layui-icon layui-icon-play"
+            },
+            {
+              "name": "舆情分析",
+              "url": "http://49.7.123.0:81/achart/智慧政务/舆情分析/public.html",
+              "icon": "layui-icon layui-icon-play"
+            },
+            {
+              "name": "交通分析",
+              "url": "http://49.7.123.0:81/achart/智慧政务/舆情分析/traffic.html",
+              "icon": "layui-icon layui-icon-play"
+            }
+          ]
+        }
+      ]
+    },{
+      "name": "智慧物流",
+      "icon": "layui-icon layui-icon-headset",
+      "url": "",
+      "subMenus": [
+        {
+          "name": "智慧物流",
+          "url": "http://49.7.123.0:81/achart/智慧物流/智慧物流/index.html",
+          "icon": "layui-icon layui-icon-video"
+        },
+        {
+          "name": "物流平台",
+          "url": "http://49.7.123.0:81/achart/智慧物流/物流平台/index.html",
+          "icon": "layui-icon layui-icon-play"
+        }
+      ]
+    },{
+      "name": "智慧电商",
+      "icon": "layui-icon layui-icon-headset",
+      "url": "",
+      "subMenus": [
+        {
+          "name": "样式A",
+          "url": "http://49.7.123.0:81/achart/智慧电商/样式A/index.html",
+          "icon": "layui-icon layui-icon-video"
+        },
+        {
+          "name": "样式B",
+          "url": "http://49.7.123.0:81/achart/智慧电商/样式B/index.html",
+          "icon": "layui-icon layui-icon-play"
+        },
+        {
+          "name": "样式C",
+          "url": "http://49.7.123.0:81/achart/智慧电商/样式C/index.html",
+          "icon": "layui-icon layui-icon-play"
+        }
+      ]
+    },{
+      "name": "智慧运维",
+      "icon": "layui-icon layui-icon-headset",
+      "url": "",
+      "subMenus": [
+        {
+          "name": "可视化运维",
+          "url": "http://49.7.123.0:81/achart/智慧运维/可视化运维/index.html",
+          "icon": "layui-icon layui-icon-video"
+        },
+        {
+          "name": "大数据统计",
+          "url": "http://49.7.123.0:81/achart/智慧运维/大数据统计/index.html",
+          "icon": "layui-icon layui-icon-play"
+        },
+        {
+          "name": "设备检测",
+          "url": "http://49.7.123.0:81/achart/智慧运维/设备检测/index.html",
+          "icon": "layui-icon layui-icon-play"
+        },
+        {
+          "name": "运维总览",
+          "url": "http://49.7.123.0:81/achart/智慧运维/运维总览图/index.html",
+          "icon": "layui-icon layui-icon-play"
+        }
+      ]
+    },{
+      "name": "智慧社区",
+      "icon": "layui-icon layui-icon-headset",
+      "url": "http://49.7.123.0:81/achart/智慧社区/index.html"
+    },{
+      "name": "智慧医疗",
+      "icon": "layui-icon layui-icon-senior",
+      "url": "http://49.7.123.0:81/achart/智慧医疗/views/index.html"
+    },{
+      "name": "智慧气象",
+      "icon": "layui-icon layui-icon-headset",
+      "url": "http://49.7.123.0:81/achart/智慧气象/index.html"
+    },{
+      "name": "智慧运营",
+      "icon": "layui-icon layui-icon-headset",
+      "url": "http://49.7.123.0:81/achart/智慧运营/page/index.html"
+    },{
+      "name": "智慧金融",
+      "icon": "layui-icon layui-icon-headset",
+      "url": "http://49.7.123.0:81/achart/智慧金融/index.html"
+    }
+  ]
+}

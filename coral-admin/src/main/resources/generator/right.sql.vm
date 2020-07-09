@@ -1,0 +1,25 @@
+-- 新增权限表数据
+
+-- 菜单SQL
+#if(${comments} eq "")
+    INSERT INTO `gem_sys_right` (`pid`, `name`, `flags` , `icon`,  `link`, `type`, `position`, `sort_number`)
+        VALUES ('0', '${className}管理', '', 'layui-icon layui-icon-app', 'extend/${moduleName}/${pathName}.html', '0', '0', '99');
+#else
+    INSERT INTO `gem_sys_right` (`pid`, `name`, `flags` , `icon`,  `link`, `type`, `position`, `sort_number`)
+        VALUES ('0', '${comments}', '', 'layui-icon layui-icon-app', 'extend/${moduleName}/${pathName}.html', '0', '0', '99');
+#end
+
+-- 按钮父菜单ID
+set @pid = @@identity;
+
+-- 菜单对应按钮SQL
+INSERT INTO `gem_sys_right` (`pid`, `name`, `flags`, `type`, `position`, `sort_number`)
+    SELECT @pid, '查询', '${classname}:page,${classname}:list,${classname}:info', '2', '0', '99';
+INSERT INTO `gem_sys_right` (`pid`, `name`, `flags`, `type`, `position`, `sort_number`)
+    SELECT @pid, '添加', '${classname}:save', '1', '0', '99';
+INSERT INTO `gem_sys_right` (`pid`, `name`, `flags`, `type`, `position`, `sort_number`)
+    SELECT @pid, '编辑', '${classname}:update', '1', '0', '99';
+INSERT INTO `gem_sys_right` (`pid`, `name`, `flags`, `type`, `position`, `sort_number`)
+    SELECT @pid, '删除', '${classname}:delete', '1', '0', '99';
+INSERT INTO `gem_sys_right` (`pid`, `name`, `flags`, `type`, `position`, `sort_number`)
+    SELECT @pid, '导出', '${classname}:export', '1', '0', '99';

@@ -1,0 +1,303 @@
+﻿
+<!DOCTYPE html>
+<html lang="zh-cn" class="fullscreen-bg" xmlns:th="http://www.thymeleaf.org"
+      xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<head th:replace="common/links :: common_header(~{::title},~{},~{})">
+    <title>会计星级-模块</title>
+</head>
+<body>
+<!-- 页面加载loading -->
+<div class="page-loading">
+    <div class="ball-loader">
+        <span></span><span></span><span></span><span></span>
+    </div>
+</div>
+<!-- 正文开始 -->
+<div class="layui-fluid">
+    <div class="layui-card">
+        <div class="layui-card-body">
+            <!-- 表格工具栏 -->
+            <form class="layui-form toolbar">
+                <div class="layui-form-item">
+                    <div class="layui-inline">
+                        <label class="layui-form-label">星级名称:</label>
+                        <div class="layui-input-inline">
+                            <input name="levenName" class="layui-input" placeholder="请输入星级名称"/>
+                        </div>
+                    </div>
+                    <div class="layui-inline">&emsp;
+                        <button class="layui-btn icon-btn" lay-filter="searchBtn" lay-submit>
+                            <i class="layui-icon">&#xe615;</i>搜索
+                        </button>&nbsp;
+                        <button shiro:hasPermission="bookingSettings:export" id="exportBtn" class="layui-btn icon-btn"
+                                type="button">
+                            <i class="layui-icon">&#xe67d;</i>导出
+                        </button>
+                    </div>
+                </div>
+            </form>
+            <!-- 数据表格 -->
+            <table id="dataTable" lay-filter="dataTable"></table>
+        </div>
+    </div>
+</div>
+
+<!-- 表格操作列 -->
+<script type="text/html" id="tableBar">
+    <a shiro:hasPermission="bookingSettings:update" class="layui-btn layui-btn-primary layui-btn-xs"
+       lay-event="edit">修改</a>
+    <a shiro:hasPermission="bookingSettings:delete" class="layui-btn layui-btn-danger layui-btn-xs"
+       lay-event="del">删除</a>
+</script>
+
+<!-- 表单弹窗 -->
+<script type="text/html" id="formDialog">
+    <form id="dataForm" lay-filter="dataForm" class="layui-form model-form">
+        <input name="id" type="hidden"/>
+        <div class="layui-form-item">
+            <label class="layui-form-label layui-form-required">星级名称:</label>
+            <div class="layui-input-block">
+                <input name="levenName" placeholder="请输入星级名称" class="layui-input"
+                       lay-verType="tips" lay-verify="required" required/>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">纳税性质</label>
+            <div class="layui-input-block">
+                <select name="other2" placeholder="请输入" class="layui-select"
+                        lay-verType="tips" >
+                    <option value="">请选择纳税性质</option>
+                    <option value="0">小规模</option>
+                    <option value="1">一般纳税人</option>
+                    <option value="2">个体户</option>
+                    <option value="3">个体户一般纳税人</option>
+                </select>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label layui-form-required">所属等级</label>
+            <div class="layui-input-block">
+                <select name="other1" placeholder="请输入" class="layui-select"
+                        lay-verType="tips" lay-verify="required" required>
+                    <option value="">请选择所属等级</option>
+                    <option value="-1">目录</option>
+                    <option value="0">一星</option>
+                    <option value="1">二星</option>
+                    <option value="2">三星</option>
+                    <option value="3">四星</option>
+                    <option value="4">五星</option>
+                </select>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label layui-form-required">提成比例/金额:</label>
+            <div class="layui-input-block">
+                <input name="commission" placeholder="请输入提成比例/金额" class="layui-input"
+                       lay-verType="tips" lay-verify="required" required/>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label layui-form-required">代账数量</label>
+            <div class="layui-input-block">
+                <input name="agencyNumber" placeholder="请输入代账数量指标" class="layui-input"
+                       lay-verType="tips" lay-verify="required" required/>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label layui-form-required">一般纳税数量</label>
+            <div class="layui-input-block">
+                <input name="generalTaxNumber" placeholder="请输入一般纳税数量指标" class="layui-input"
+                       lay-verType="tips" lay-verify="required" required/>
+            </div>
+        </div>
+
+        <div class="layui-form-item text-right">
+            <button class="layui-btn" lay-filter="saveBtn" lay-submit>保存</button>
+            <button class="layui-btn layui-btn-primary" type="button" ew-event="closeDialog">取消</button>
+        </div>
+    </form>
+</script>
+<!-- js部分 -->
+<div th:replace="common/scripts :: common"></div>
+<div th:replace="common/scripts :: custom"></div>
+<div>
+    <script>
+        //全局变量 Shiro权限
+        var shiroSave = false;
+        var shiroDelete = false;
+        var shiroUpdate = false;
+        var shiroInfo = false;
+    </script>
+    <!-- 设置Shiro权限变量 -->
+    <shiro:hasAllPermissions name="bookingSettings:save">
+        <script>shiroSave = true;</script>
+    </shiro:hasAllPermissions>
+    <shiro:hasAllPermissions name="bookingSettings:delete">
+        <script>shiroDelete = true;</script>
+    </shiro:hasAllPermissions>
+    <shiro:hasAllPermissions name="bookingSettings:update">
+        <script>shiroUpdate = true;</script>
+    </shiro:hasAllPermissions>
+</div>
+<script>
+    layui.use(['layer', 'form', 'table', 'util', 'laydate', 'tableX', 'admin'], function () {
+        var $ = layui.jquery;
+        var layer = layui.layer;
+        var form = layui.form;
+        var table = layui.table;
+        var util = layui.util;
+        var laydate = layui.laydate;
+        var tableX = layui.tableX;
+        var admin = layui.admin;
+
+        /* 渲染表格 */
+        var cols = [
+            {type: 'checkbox'},
+            {field: 'levenName', title: '星级名称', align: 'center'},
+            { title: '纳税性质',templet: function (d) {
+                    var strs = [
+                        '<span class="layui-badge layui-badge-green">小规模</span>',
+                        '<span class="layui-badge layui-badge-blue">一般纳税人</span>',
+                        '<span class="layui-badge layui-badge-yellow">个体户</span>',
+                        '<span class="layui-badge layui-badge-pink">个体户一般纳税人</span>'
+                    ];
+                    return d.other2==null?"":strs[d.other2];
+                }, align: 'center'},
+            {field: 'commission', title: '提成比例/金额', align: 'center'},
+            {field: 'agencyNumber', title: "代账数量", align: 'center'},
+            {field: 'generalTaxNumber', title: '一般纳税人数量', align: 'center'},
+            {title: '操作', toolbar: '#tableBar', align: 'center', minWidth: 200}
+        ];
+
+        var insTb = table.render({
+            elem: '#dataTable',
+            url: 'bookingSettings/page',
+            page: true,
+            toolbar: [shiroToolbar(shiroSave, shiroDelete)].join(''),
+            cellMinWidth: 100,
+            cols: [cols],
+            done: function () {
+                // 绑定鼠标右键
+               // tableX.bindCtxMenu('dataTable', shiroBindCtxMenu(shiroDelete, shiroUpdate));
+            }
+        });
+
+        /* 渲染时间选择 */
+        laydate.render({
+            elem: 'input[name="dateRange"]',
+            type: 'date',
+            range: true,
+            trigger: 'click'
+        });
+
+
+        /* 表格工具条点击事件 */
+        table.on('tool(dataTable)', function (obj) {
+            if (obj.event === 'edit') { // 修改
+                showEditModel(obj.data);
+            } else if (obj.event === 'del') { // 删除
+                doDel(obj.data);
+            } else if (obj.event === 'reset') { // 重置密码
+                resetPsw(obj);
+            }
+        });
+
+        /* 表格头工具栏点击事件 */
+        table.on('toolbar(dataTable)', function (obj) {
+            if (obj.event === 'add') { // 添加
+                showEditModel();
+            } else if (obj.event === 'del') { // 删除
+                var checkRows = table.checkStatus('dataTable');
+                if (checkRows.data.length === 0) {
+                    layer.msg('请选择要删除的数据', {icon: 2});
+                    return;
+                }
+                var ids = checkRows.data.map(function (d) {
+                    return d.id;
+                });
+                doDel({ids: ids});
+            }
+        });
+
+        // 显示编辑弹窗
+        function showEditModel(mData) {
+            admin.open({
+                type: 1,
+                area: '800px',
+                title: (mData ? '修改' : '添加'),
+                content: $('#formDialog').html(),
+                success: function (layero, dIndex) {
+                    form.val('dataForm', mData);  // 回显数据
+                    // 添加权限信息
+                    form.on('submit(saveBtn)', function (data) {
+                        $.post(mData ? 'bookingSettings/update' : 'bookingSettings/save', data.field, function (res) {
+                            if (res.code == 0) {
+                                layer.close(dIndex);
+                                layer.msg(res.msg, {icon: 1});
+                                insTb.reload({page: {curr: 1}});
+                            } else {
+                                layer.msg(res.msg, {icon: 2});
+                            }
+                        }, 'json');
+                        return false;
+                    });
+                }
+            });
+        }
+
+        /* 表格搜索 */
+        form.on('submit(searchBtn)', function (data) {
+            if (data.field.dateRange) {
+                var searchDate = data.field.dateRange.split(' - ');
+                data.field.startDate = searchDate[0];
+                data.field.endDate = searchDate[1];
+            } else {
+                data.field.startDate = '';
+                data.field.endDate = '';
+            }
+            data.field.dateRange = undefined;
+            insTb.reload({where: data.field, page: {curr: 1}});
+            return false;
+        });
+
+        /* 导出excel */
+        $('#exportBtn').click(function () {
+            var checkRows = table.checkStatus('dataTable');
+            if (checkRows.data.length === 0) {
+                layer.msg('请选择要导出的数据', {icon: 2});
+            } else {
+                tableX.exportDataX({
+                    cols: insTb.config.cols,
+                    data: checkRows.data,
+                    fileName: '导出数据'
+                });
+            }
+        });
+
+
+        /* 删除 */
+        window.doDel = function (obj) {
+            layer.confirm('确定要删除选中数据吗？', {
+                skin: 'layui-layer-admin',
+                shade: .1
+            }, function (i) {
+                layer.close(i);
+                var loadIndex = layer.load(2);
+                $.post('bookingSettings/delete', {
+                    id: obj ? obj.id : '',
+                    ids: obj.ids ? obj.ids.join(',') : ''
+                }, function (res) {
+                    layer.close(loadIndex);
+                    if (res.code === 0) {
+                        layer.msg(res.msg, {icon: 1});
+                        insTb.reload({page: {curr: 1}});
+                    } else {
+                        layer.msg(res.msg, {icon: 2});
+                    }
+                }, 'json');
+            });
+        }
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,46 @@
+
+<!DOCTYPE html>
+<html lang="zh-cn" class="fullscreen-bg" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="common/links :: common_header(~{::title},~{},~{})">
+    <title>合同管理系统</title>
+</head>
+<body class="layui-layout-body">
+<div class="layui-layout layui-layout-admin">
+    <!--头部信息-->
+    <div th:replace="layout/header::head_navbar"></div>
+    <!--左边导航-->
+    <div th:replace="layout/lefter::left_sidebar"></div>
+    <!--中间内容-->
+    <div th:replace="layout/main::main"></div>
+    <!--底部版权-->
+    <div th:replace="layout/footer::footer"></div>
+</div>
+
+<!-- 加载动画 -->
+<div class="page-loading">
+    <div class="ball-loader">
+        <span></span><span></span><span></span><span></span>
+    </div>
+</div>
+
+<!-- js部分 -->
+<div th:replace="common/scripts :: jquery"></div>
+<div th:replace="common/scripts :: common"></div>
+<div th:replace="common/scripts :: index"></div>
+<div th:replace="common/scripts :: custom"></div>
+<script>
+    layui.use(['index'], function () {
+        var $ = layui.jquery;
+        var index = layui.index;
+        // 默认加载主页
+        index.loadHome({
+            menuPath: 'prekit/sys/userinfo.html',
+            menuName: '<i class="layui-icon layui-icon-theme"></i>  个人中心'
+        });
+
+
+    });
+
+</script>
+</body>
+</html>

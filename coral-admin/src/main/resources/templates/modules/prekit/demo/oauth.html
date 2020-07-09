@@ -1,0 +1,98 @@
+﻿
+<!DOCTYPE html>
+<html lang="zh-cn" class="fullscreen-bg" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<head th:replace="common/links :: common_header(~{::title},~{},~{})">
+    <title>授权登录</title>
+</head>
+<body>
+<!-- 页面加载loading -->
+<div class="page-loading">
+    <div class="ball-loader">
+        <span></span><span></span><span></span><span></span>
+    </div>
+</div>
+
+<!-- 正文开始 -->
+<div class="layui-fluid">
+    <div class="layui-row layui-col-space15">
+        <div class="layui-col-md15">
+            <div class="layui-card">
+                <div class="layui-card-header">OAuth2第三方平台授权登录示例</div>
+                <div class="layui-card-body">
+                    <div class="split-group">
+                        <a type="button" class="layui-btn layui-btn-danger layui-btn-radius"
+                           th:href="@{/oauth/gitee}">
+                            <i class="fa fa-git" aria-hidden="true"></i>
+                            码云登录
+                        </a>
+                        <a type="button" class="layui-btn layui-btn-primary layui-btn-radius"
+                               target="_blank" th:href="@{/oauth/github}">
+                            <i class="fa fa-github" aria-hidden="true"></i>
+                            GitHUB登录
+                        </a>
+                        <a type="button" class="layui-btn layui-btn-green layui-btn-radius"
+                           th:href="@{/oauth/wechat}">
+                            <i class="fa fa-weixin" aria-hidden="true"></i>
+                            微信登录
+                            <i class="layui-icon layui-icon-tips" lay-tips="请在微信客户端内部打开"
+                               lay-direction="1" lay-offset="0,-10px"></i>
+                        </a>
+                        <a type="button" class="layui-btn layui-btn-radius layui-bg-green"
+                           onclick="layer.msg('开放平台应用申请中...');">
+                            <i class="fa fa-qrcode" aria-hidden="true"></i>
+                            微信扫码登录
+                        </a>
+                        <a type="button" class="layui-btn layui-bg-gray layui-btn-radius"
+                           onclick="layer.msg('开发中,敬请期待...');">
+                            <i class="fa fa-qq" aria-hidden="true"></i>
+                            QQ登录
+                        </a>
+                        <a type="button" class="layui-btn layui-bg-cyan layui-btn-radius"
+                           onclick="layer.msg('开发中,敬请期待...');">
+                            <i class="fa fa-weibo" aria-hidden="true"></i>
+                            微博登录
+                        </a>
+                        <a type="button" class="layui-btn layui-btn-normal layui-btn-radius"
+                           onclick="layer.msg('开发中,敬请期待...');">
+                            <i class="fa fa-jpy" aria-hidden="true"></i>
+                            支付宝登录
+                        </a>
+                        <a type="button" class="layui-btn layui-bg-orange layui-btn-radius"
+                           onclick="layer.msg('开发中,敬请期待...');">
+                            <i class="fa fa-shopping-cart" aria-hidden="true"></i>
+                            淘宝登录
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="layui-row layui-col-space15">
+        <div class="layui-col-md15">
+            <div class="layui-card">
+                <div class="layui-card-header">获取到的用户信息</div>
+                <div class="layui-card-body">
+                    <div class="split-group" id="json-renderer">
+                        <pre class="layui-code" lay-title="Json" lay-skin="notepad">
+                            <p th:text="${memberInfo}"></p>
+                        </pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- js部分1 -->
+
+<div th:replace="common/scripts :: common"></div>
+<div th:replace="common/scripts :: custom"></div>
+<script th:inline="javascript">
+    layui.use(['layer', 'Split'], function () {
+        var $ = layui.jquery;
+        var layer = layui.layer;
+    });
+</script>
+</body>
+</html>

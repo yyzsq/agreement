@@ -1,0 +1,490 @@
+﻿<!DOCTYPE html>
+<html lang="zh-cn" class="fullscreen-bg" xmlns:th="http://www.thymeleaf.org"
+      xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<head th:replace="common/links :: common_header(~{::title},~{},~{})">
+    <title>业务提成-模块</title>
+</head>
+<style>
+    .layui-layer-page{
+        height: 500px;
+        overflow:auto
+    }
+</style>
+<body>
+<!-- 页面加载loading -->
+<div class="page-loading">
+    <div class="ball-loader">
+        <span></span><span></span><span></span><span></span>
+    </div>
+</div>
+<!-- 正文开始 -->
+<div class="layui-fluid">
+    <div class="layui-card">
+        <div class="layui-card-body">
+            <!-- 表格工具栏 -->
+            <form class="layui-form toolbar">
+                <div class="layui-form-item">
+                    <!--<div class="layui-inline">
+                        <label class="layui-form-label">提成人:</label>
+                        <div class="layui-input-inline">
+                            <input name="userId" class="layui-input" placeholder="请输入提成人"/>
+                        </div>
+                    </div>
+                    <div class="layui-inline">
+                        <label class="layui-form-label">提成类型:</label>
+                        <div class="layui-input-inline">
+                            <input name="type" class="layui-input" placeholder="请输入提成类型"/>
+                        </div>
+                    </div>
+                    <div class="layui-inline">
+                        <label class="layui-form-label">提成比例:</label>
+                        <div class="layui-input-inline">
+                            <input name="proportion" class="layui-input" placeholder="请输入提成比例"/>
+                        </div>
+                    </div>
+                    <div class="layui-inline">
+                        <label class="layui-form-label">提成金额:</label>
+                        <div class="layui-input-inline">
+                            <input name="money" class="layui-input" placeholder="请输入提成金额"/>
+                        </div>
+                    </div>-->
+                    <div class="layui-inline">
+                        <label class="layui-form-label">提成人:</label>
+                        <div class="layui-input-inline">
+                            <select name="userId"  id="userId" class="layui-select">
+
+                            </select>
+                        </div>
+                    </div>
+                    <div class="layui-inline">
+                        <label class="layui-form-label">提成类型:</label>
+                        <div class="layui-input-inline">
+                            <select name="type" class="layui-select">
+                                <option value="">请选择提成类型</option>
+                                <option value="0">业务提成</option>
+                                <option value="1">办事提成</option>
+                                <option value="2">合同提成</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="layui-inline">
+                        <label class="layui-form-label">时间范围:</label>
+                        <div class="layui-input-inline">
+                            <input name="dateRange" class="layui-input icon-date" placeholder="选择日期范围"
+                                   autocomplete="off"/>
+                        </div>
+                    </div>
+
+
+                    <div class="layui-inline">&emsp;
+                        <button class="layui-btn icon-btn" lay-filter="searchBtn" lay-submit>
+                            <i class="layui-icon">&#xe615;</i>搜索
+                        </button>&nbsp;
+                        <button shiro:hasPermission="serviceCommission:export" id="exportBtn" class="layui-btn icon-btn"
+                                type="button">
+                            <i class="layui-icon">&#xe67d;</i>导出
+                        </button>
+                    </div>
+                </div>
+            </form>
+            <!-- 数据表格 -->
+            <table id="dataTable" lay-filter="dataTable"></table>
+        </div>
+    </div>
+</div>
+
+<script type="text/html" id="danNumberTpl">
+    <a href="javascript:void(0);" onclick="huoquds('{{d.id}}','{{d.type}}')"> {{d.danNumber }}</a>
+</script>
+<!-- 表格操作列 -->
+<script type="text/html" id="tableBar">
+    <a shiro:hasPermission="serviceCommission:update" class="layui-btn layui-btn-primary layui-btn-xs" lay-event="edit">修改</a>
+    <a shiro:hasPermission="serviceCommission:delete" class="layui-btn layui-btn-danger layui-btn-xs"
+       lay-event="del">删除</a>
+    <a  class="layui-btn layui-btn-danger layui-btn-xs"
+        lay-event="scsj">测试生成数据，请勿随意点击</a>
+</script>
+
+<!-- 表单弹窗 -->
+<script type="text/html" id="formDialog">
+    <form id="dataForm" lay-filter="dataForm" class="layui-form model-form">
+        <input name="id" type="hidden"/>
+        <div class="layui-form-item">
+            <label class="layui-form-label layui-form-required">提成人:</label>
+            <div class="layui-input-block">
+                <select name="userId" class="layui-select" lay-verify="required" required></select>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label layui-form-required">提成类型:</label>
+            <div class="layui-input-block">
+                <select name="type" lay-verify="required" required>
+                    <option value="">请选择提成类型</option>
+                    <option value="0">业务提成</option>
+                    <option value="1">办事提成</option>
+                </select>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label layui-form-required">提成比例:</label>
+            <div class="layui-input-block">
+                <input name="proportion" placeholder="请输入提成比例" class="layui-input"
+                       lay-verType="tips" lay-verify="required" required/>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label layui-form-required">提成金额:</label>
+            <div class="layui-input-block">
+                <input name="money" placeholder="请输入提成金额" class="layui-input"
+                       lay-verType="tips" lay-verify="required" required/>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label layui-form-required">提成时间:</label>
+            <div class="layui-input-block">
+                <input name="date" placeholder="请输入提成时间" class="layui-input"
+                       lay-verType="tips" lay-verify="required" required/>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label layui-form-required">总金额:</label>
+            <div class="layui-input-block">
+                <input name="countMoney" placeholder="请输入总金额" class="layui-input"
+                       lay-verType="tips" lay-verify="required" required/>
+            </div>
+        </div>
+
+
+        <div class="layui-form-item text-right">
+            <button class="layui-btn" lay-filter="saveBtn" lay-submit>保存</button>
+            <button class="layui-btn layui-btn-primary" type="button" ew-event="closeDialog">取消</button>
+        </div>
+    </form>
+</script>
+<!-- js部分 -->
+<div th:replace="common/scripts :: common"></div>
+<div th:replace="common/scripts :: custom"></div>
+<div>
+    <script>
+        //全局变量 Shiro权限
+        var shiroSave = false;
+        var shiroDelete = false;
+        var shiroUpdate = false;
+        var shiroInfo = false;
+    </script>
+    <!-- 设置Shiro权限变量 -->
+    <shiro:hasAllPermissions name="serviceCommission:save">
+        <script>shiroSave = true;</script>
+    </shiro:hasAllPermissions>
+    <shiro:hasAllPermissions name="serviceCommission:delete">
+        <script>shiroDelete = true;</script>
+    </shiro:hasAllPermissions>
+    <shiro:hasAllPermissions name="serviceCommission:update">
+        <script>shiroUpdate = true;</script>
+    </shiro:hasAllPermissions>
+</div>
+<script>
+    layui.use(['layer','element', 'form', 'table', 'util', 'laydate', 'tableX', 'admin'], function () {
+        var $ = layui.jquery;
+        var layer = layui.layer;
+        var form = layui.form;
+        var table = layui.table;
+        var util = layui.util;
+        var laydate = layui.laydate;
+        var tableX = layui.tableX;
+        var admin = layui.admin;
+        var element = layui.element
+/*
+        element.tabAdd('admin-pagetabs',{
+            title: '选项卡的标题'
+            ,content: '选项卡的内容' //支持传入html
+            ,id: 'xinzeng'
+        });*/
+
+        /* 渲染表格 */
+        var cols = [
+            {type: 'checkbox'},
+            {field: 'userName', title: '提成人名称', align: 'center'},
+            { title: '提成类型',templet: function (d) {
+                    var strs = [
+                        '<span class="layui-badge layui-badge-green">业务提成</span>',
+                        '<span class="layui-badge layui-badge-blue">办事提成</span>',
+                        '<span class="layui-badge layui-badge-red">合同提成</span>'
+                    ];
+                    return strs[d.type];
+                }, align: 'center'},
+            {field: 'other1', title: '提成名称', align: 'center'},
+            {field: 'proportion', title: '提成比例', align: 'center'},
+            {field: 'money', title: '提成金额', align: 'center'},
+            {field: 'date', title: '提成时间', align: 'center'},
+            { title: '提成单量', align: 'center' ,templet:'#danNumberTpl'},
+            {field: 'countMoney', title: '总金额', align: 'center'},
+            {title: '操作', toolbar: '#tableBar', align: 'center', minWidth: 200}
+        ];
+
+        $.ajax({
+            url:"/extend/contract/contractInfo/userRoles/list",
+            dataType:"json",
+            type:"get",
+            async:false,
+            success :function (res) {
+                var userInfo="<option value=''>请选择提成人</option>"
+                for(var i=0;i<res.data.length;i++){
+                    var user=res.data[i];
+                    if(user==null){
+                        continue;
+                    }
+                    userInfo+="<option value='"+user.id+"'>"+user.realname+"</option>"
+                }
+                $("#userId").html("")
+                $("#userId").append(userInfo);
+                form.render('select');
+            }
+        });
+
+        var insTb = table.render({
+            elem: '#dataTable',
+            url: 'serviceCommission/page',
+            page: true,
+            toolbar: [shiroToolbar5(shiroSave, shiroDelete)].join(''),
+            limit:50,
+            limits:[10,20,30,40,50,5000],
+            cellMinWidth: 100,
+            cols: [cols],
+            done: function () {
+                // 绑定鼠标右键
+               // tableX.bindCtxMenu('dataTable', shiroBindCtxMenu(shiroDelete, shiroUpdate));
+            }
+        });
+
+        /* 渲染时间选择 */
+        laydate.render({
+            elem: 'input[name="dateRange"]',
+            type: 'date',
+            range: true,
+            trigger: 'click'
+        });
+
+
+        /* 表格工具条点击事件 */
+        table.on('tool(dataTable)', function (obj) {
+            if (obj.event === 'edit') { // 修改
+                showEditModel(obj.data);
+            } else if (obj.event === 'del') { // 删除
+                doDel(obj.data);
+            } else if (obj.event === 'reset') { // 重置密码
+                resetPsw(obj);
+            }
+        });
+
+        /* 表格头工具栏点击事件 */
+        table.on('toolbar(dataTable)', function (obj) {
+            if (obj.event === 'add') { // 添加
+                showEditModel();
+            } else if (obj.event === 'del') { // 删除
+                var checkRows = table.checkStatus('dataTable');
+                if (checkRows.data.length === 0) {
+                    layer.msg('请选择要删除的数据', {icon: 2});
+                    return;
+                }
+                var ids = checkRows.data.map(function (d) {
+                    return d.id;
+                });
+                doDel({ids: ids});
+            }else if(obj.event === 'scsj'){
+                scsj()
+            }
+        });
+
+        // 显示编辑弹窗
+        function showEditModel(mData) {
+            admin.open({
+                type: 1,
+                area: '800px',
+                title: (mData ? '修改' : '添加'),
+                content: $('#formDialog').html(),
+                success: function (layero, dIndex) {
+                    $.ajax({
+                        url:"/extend/contract/contractInfo/userRoles/list",
+                        dataType:"json",
+                        type:"get",
+                        async:false,
+                        success :function (res) {
+                            var userInfo="<option value=''>请选择提成人</option>"
+                            for(var i=0;i<res.data.length;i++){
+                                var user=res.data[i];
+                                if(user==null){
+                                    continue;
+                                }
+                                userInfo+="<option value='"+user.id+"'>"+user.realname+"</option>"
+                            }
+                            $("[name='userId']").html("")
+                            $("[name='userId']").append(userInfo);
+                            form.render('select');
+                        }
+                    });
+                    form.val('dataForm', mData);  // 回显数据
+                    form.render('select');
+                    // 添加权限信息
+                    form.on('submit(saveBtn)', function (data) {
+                        $.post(mData ? 'serviceCommission/update' : 'serviceCommission/save', data.field, function (res) {
+                            if (res.code == 0) {
+                                layer.close(dIndex);
+                                layer.msg(res.msg, {icon: 1});
+                                insTb.reload({page: {curr: 1}});
+                            } else {
+                                layer.msg(res.msg, {icon: 2});
+                            }
+                        }, 'json');
+                        return false;
+                    });
+                }
+            });
+        }
+
+        /* 表格搜索 */
+        form.on('submit(searchBtn)', function (data) {
+            if (data.field.dateRange) {
+                var searchDate = data.field.dateRange.split(' - ');
+                data.field.startDate = searchDate[0];
+                data.field.endDate = searchDate[1];
+            } else {
+                data.field.startDate = '';
+                data.field.endDate = '';
+            }
+            data.field.dateRange = undefined;
+            insTb.reload({where: data.field, page: {curr: 1}});
+            return false;
+        });
+
+        /* 导出excel */
+        $('#exportBtn').click(function () {
+            var checkRows = table.checkStatus('dataTable');
+            if (checkRows.data.length === 0) {
+                layer.msg('请选择要导出的数据', {icon: 2});
+            } else {
+                tableX.exportDataX({
+                    cols: insTb.config.cols,
+                    data: checkRows.data,
+                    fileName: '导出数据'
+                });
+            }
+        });
+
+
+        window.scsj = function (obj){
+            $.post('serviceCommission/scsj', function (res) {
+                if (res.code === 0) {
+                    layer.msg(res.msg, {icon: 1});
+                    insTb.reload({page: {curr: 1}});
+                } else {
+                    layer.msg(res.msg, {icon: 2});
+                }
+            }, 'json');
+        }
+
+        /* 删除 */
+        window.doDel = function (obj) {
+            layer.confirm('确定要删除选中数据吗？', {
+                skin: 'layui-layer-admin',
+                shade: .1
+            }, function (i) {
+                layer.close(i);
+                var loadIndex = layer.load(2);
+                $.post('serviceCommission/delete', {
+                    id: obj ? obj.id : '',
+                    ids: obj.ids ? obj.ids.join(',') : ''
+                }, function (res) {
+                    layer.close(loadIndex);
+                    if (res.code === 0) {
+                        layer.msg(res.msg, {icon: 1});
+                        insTb.reload({page: {curr: 1}});
+                    } else {
+                        layer.msg(res.msg, {icon: 2});
+                    }
+                }, 'json');
+            });
+        }
+      /* alert( parent.$('#layui-body').html());
+
+        element.on('tab(admin-pagetabs)', function(data){
+            console.log(data);
+        });
+
+        element.tabAdd('admin-pagetabs', {
+            title: '选项卡的标题'
+            ,content: '选项卡的内容' //支持传入html
+            ,id: '选项卡标题的lay-id属性值'
+        });
+*/
+       /* element.on('tab(admin-pagetabs)', function(data){
+            console.log(data);
+        });*/
+        //window.parent.layui.index.openTabsPage('/job/cearte?id=4', '发布职位');
+        /*parent.$('#layui-body').find(".layui-tab-title").append("" +
+            "<li lay-id=\"prekit/sys/userinfo.html\" class=\"\"><span class=\"title\"><i class=\"layui-icon layui-icon-theme\"></i>  cesss</span><i class=\"layui-icon layui-unselect layui-tab-close\">ဆ</i></li>")*/
+       /**/
+        window.huoquds = function(res,type) {
+            if(type=="0"||type=="1") {
+                localStorage.setItem("tichengFlag", true);
+                localStorage.setItem("tiId", res);
+                top.layui.index.openTab({
+                    title: '收费信息',
+                    url: '/extend/business/businesscharges.html',
+                    end: function () {
+                        // insTb.reload();
+                    }
+                });
+            }else{
+                localStorage.setItem("tichengFlag", true);
+                localStorage.setItem("tiId", res);
+                localStorage.setItem("tcType","1");
+                top.layui.index.openTab({
+                    title: '合同信息',
+                    url: '/extend/contract/contractinfo.html',
+                    end: function () {
+                        // insTb.reload();
+                    }
+                });
+            }
+        }
+        var active = {
+            tabAdd: function (url, id, title) {
+                //新增一个Tab项
+                element.tabAdd(("admin-pagetabs"), {
+                    title: title //用于演示
+                    , content: '<iframe data-frameid="' + id + '" frameborder="0" name="content" width="100%" src="' + url + '"></iframe>'
+                    , id: id //实际使用一般是规定好的id，这里以时间戳模拟下
+                })
+                //FrameWH();//计算框架高度
+            }
+        };
+
+        var _this=null;
+        parent.$('#sidebar-menu li cite').each(function (res) {
+            console.log($(this).text())
+            if("业务收费"==$(this).text()){
+                _this=$(this).parents("a");
+                console.log(_this)
+            }
+        })
+
+        var q = ".layui-nav", s = "layui-nav-item", n = "layui-nav-bar", k = "layui-nav-tree", d = "layui-nav-child",
+            e = "layui-nav-more", o = "layui-anim layui-anim-upbit",p = {
+
+
+            clickThis: function () {
+
+
+                var x = c(this), u = x.parents(q), w = 'admin-side-nav', v = x.parent(), z = x.siblings("." + d),
+                    t = false;
+
+                    z.removeClass(o);
+                    layui.event.call(_this, "element", "nav(" + "admin-side-nav" + ")", $(_this))
+
+            }
+        }
+    });
+</script>
+</body>
+</html>

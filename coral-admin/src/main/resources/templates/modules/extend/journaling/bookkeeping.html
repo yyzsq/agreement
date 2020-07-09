@@ -1,0 +1,213 @@
+﻿<!DOCTYPE html>
+<html lang="zh-cn" class="fullscreen-bg" xmlns:th="http://www.thymeleaf.org"
+      xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<head th:replace="common/links :: common_header(~{::title},~{},~{})">
+    <title>记账户数-模块</title>
+</head>
+<!--<script type="text/javascript" th:src="@{/assets/js/jquery-3.2.1.min.js}"></script>-->
+<body>
+<!-- 页面加载loading -->
+<div class="page-loading">
+    <div class="ball-loader">
+        <span></span><span></span><span></span><span></span>
+    </div>
+</div>
+<!-- 正文开始 -->
+<div class="layui-fluid">
+    <div class="layui-card">
+        <div class="layui-card-body">
+            <!-- 表格工具栏 -->
+                <div class="layui-form-item">
+                    <div class="layui-inline">
+                        <button class="layui-btn showBtnColor" flag="0" style="background-color: white;color: black;border:1px black solid;" >小规模</button>
+                    </div>
+                    <div class="layui-inline ">
+                        <button class="layui-btn showBtnColor" flag="1" style="background-color: white;color: black;border:1px black solid;">一般纳税人</button>
+                    </div>
+                    <div class="layui-inline">
+                        <button class="layui-btn showBtnColor" flag="2"style="background-color: white;color: black;border:1px black solid;">个体户</button>
+                    </div>
+                    <div class="layui-inline">
+                        <button class="layui-btn showBtnColor" flag="3" style="background-color: white;color: black;border:1px black solid;">个体户一般纳税人</button>
+                    </div>
+                   <!-- <div class="layui-inline">&emsp;
+                        <button shiro:hasPermission="bookkeeping:export" id="exportBtn" class="layui-btn icon-btn"
+                                type="button">
+                            <i class="layui-icon">&#xe67d;</i>导出
+                        </button>
+                    </div>-->
+                </div>
+            <!-- 数据表格 -->
+            <table id="dataTable" lay-filter="dataTable"></table>
+        </div>
+    </div>
+</div>
+
+
+<!-- js部分 -->
+<div th:replace="common/scripts :: common"></div>
+<div th:replace="common/scripts :: custom"></div>
+<div>
+    <script>
+        //全局变量 Shiro权限
+        var shiroSave = false;
+        var shiroDelete = false;
+        var shiroUpdate = false;
+        var shiroInfo = false;
+    </script>
+    <!-- 设置Shiro权限变量 -->
+    <shiro:hasAllPermissions name="bookkeeping:save">
+        <script>shiroSave = true;</script>
+    </shiro:hasAllPermissions>
+    <shiro:hasAllPermissions name="bookkeeping:delete">
+        <script>shiroDelete = true;</script>
+    </shiro:hasAllPermissions>
+    <shiro:hasAllPermissions name="bookkeeping:update">
+        <script>shiroUpdate = true;</script>
+    </shiro:hasAllPermissions>
+</div>
+<script>
+    layui.use(['layer', 'form', 'table', 'util', 'laydate', 'tableX', 'admin'], function () {
+        var $ = layui.jquery;
+        var layer = layui.layer;
+        var form = layui.form;
+        var table = layui.table;
+        var util = layui.util;
+        var laydate = layui.laydate;
+        var tableX = layui.tableX;
+        var admin = layui.admin;
+
+        /* 渲染表格 */
+        var cols = [
+            {type: 'checkbox'},
+            {field: 'contractId', title: '合同编号', align: 'center'},
+            {field: 'customerName', title: '客户名称', align: "center"},
+            {
+                field: 'serviceStartTime', title: '服务期间', templet: function (d) {
+                    return util.toDateString(d.serviceStartTime, "yyyy-MM-dd") + " ～ " + util.toDateString(d.serviceEndTime, "yyyy-MM-dd");
+                }, sort: true, align: "center", width: 200
+            },
+            {field: 'amountMoney', title: '合同金额', align: 'center'},
+            {
+                title: '合同性质', templet: function (d) {
+                    var strs = [
+                        '<span class="layui-badge layui-badge-green">小规模</span>',
+                        '<span class="layui-badge layui-badge-blue">一般纳税人</span>',
+                        '<span class="layui-badge layui-badge-yellow">个体户</span>',
+                        '<span class="layui-badge layui-badge-pink">个体户一般纳税人</span>'
+                    ];
+                    return strs[d.contractNature];
+                }, align: 'center'
+            },
+            {field: 'accountingName', title: '代账会计', align: 'center'}
+            /*   {title: '操作', toolbar: '#tableBar', align: 'center', minWidth: 200}*/
+        ];
+
+        var insTb = table.render({
+            elem: '#dataTable',
+            url: 'bookkeeping/page',
+            page: true,
+            toolbar: [shiroToolbar(shiroSave, shiroDelete)].join(''),
+            cellMinWidth: 100,
+            cols: [cols],
+            done: function () {
+                // 绑定鼠标右键
+                //tableX.bindCtxMenu('dataTable', shiroBindCtxMenu(shiroDelete, shiroUpdate));
+            }
+        });
+
+
+        /* 表格工具条点击事件 */
+        table.on('tool(dataTable)', function (obj) {
+            if (obj.event === 'edit') { // 修改
+                showEditModel(obj.data);
+            } else if (obj.event === 'del') { // 删除
+                doDel(obj.data);
+            } else if (obj.event === 'reset') { // 重置密码
+                resetPsw(obj);
+            }
+        });
+
+        /* 表格头工具栏点击事件 */
+        table.on('toolbar(dataTable)', function (obj) {
+            if (obj.event === 'add') { // 添加
+                showEditModel();
+            } else if (obj.event === 'del') { // 删除
+                var checkRows = table.checkStatus('dataTable');
+                if (checkRows.data.length === 0) {
+                    layer.msg('请选择要删除的数据', {icon: 2});
+                    return;
+                }
+                var ids = checkRows.data.map(function (d) {
+                    return d.id;
+                });
+                doDel({ids: ids});
+            }
+        });
+
+
+        /* 表格搜索 */
+        form.on('submit(searchBtn)', function (data) {
+            if (data.field.dateRange) {
+                var searchDate = data.field.dateRange.split(' - ');
+                data.field.startDate = searchDate[0];
+                data.field.endDate = searchDate[1];
+            } else {
+                data.field.startDate = '';
+                data.field.endDate = '';
+            }
+            data.field.dateRange = undefined;
+            insTb.reload({where: data.field, page: {curr: 1}});
+            return false;
+        });
+        $('.showBtnColor').click(function (res) {
+           $(".showBtnColor").each(function () {
+               $(this).attr("style","background-color: white;color: black;border:1px black solid;")
+           })
+            $(this).removeAttr("style")
+
+            var flag=$(this).attr("flag");
+           var countPage=null;
+            $.get("bookkeeping/countPage?contractNature="+flag,function (res) {
+                countPage=res.data;
+                var htmlflag="";
+                if(flag=="0"){
+                    htmlflag="小规模客户数为："+countPage;
+                }else if(flag=="1"){
+                    htmlflag="一般纳税人客户数为："+countPage;
+                }else if(flag=="2"){
+                    htmlflag="个体户客户数为："+countPage;
+                }else if(flag=="3"){
+                    htmlflag="个体户一般纳税人呢客户数为："+countPage;
+                }
+                insTb = table.render({
+                    elem: '#dataTable',
+                    url: 'bookkeeping/page?contractNature='+flag,
+                    page: true,
+                    toolbar: [showCountText(htmlflag)].join(''),
+                    cellMinWidth: 100,
+                    cols: [cols]
+                });
+            })
+
+        });
+        /* 导出excel */
+        $('#exportBtn').click(function () {
+            var checkRows = table.checkStatus('dataTable');
+            if (checkRows.data.length === 0) {
+                layer.msg('请选择要导出的数据', {icon: 2});
+            } else {
+                tableX.exportDataX({
+                    cols: insTb.config.cols,
+                    data: checkRows.data,
+                    fileName: '导出数据'
+                });
+            }
+        });
+
+
+    });
+
+</script>
+</body>
+</html>

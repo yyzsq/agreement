@@ -1,0 +1,376 @@
+
+<!DOCTYPE html>
+<html lang="zh-cn" class="fullscreen-bg" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<head th:replace="common/links :: common_header(~{::title},~{::style},~{})">
+<title>权限管理</title>
+    <style>
+        .hide {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+<!-- 正文开始 -->
+<div class="layui-fluid">
+    <div class="layui-card">
+        <div class="layui-card-body">
+            <!--表格工具栏-->
+            <form class="layui-form toolbar">
+                <div class="layui-form-item">
+                    <div class="layui-inline">
+                        <label class="layui-form-label">权限名称:</label>
+                        <div class="layui-input-inline">
+                            <input name="name" class="layui-input" placeholder="输入权限名称"/>
+                        </div>
+                    </div>
+                    <div class="layui-inline">
+                        <label class="layui-form-label">权限标识:</label>
+                        <div class="layui-input-inline">
+                            <input name="flags" class="layui-input" placeholder="输入权限标识"/>
+                        </div>
+                    </div>
+                    <div class="layui-inline">&emsp;
+                        <button class="layui-btn icon-btn" lay-filter="searchBtn" lay-submit>
+                            <i class="layui-icon">&#xe615;</i>搜索
+                        </button>&nbsp;
+                        <button shiro:hasPermission="right:save" id="addBtn" class="layui-btn icon-btn" type="button">
+                            <i class="layui-icon">&#xe654;</i>添加
+                        </button>
+                        <button id="expandAllBtn" class="layui-btn icon-btn" type="button">
+                            <i class="layui-icon">&#xe622;</i>展开所有
+                        </button>
+                        <button id="foldAllBtn" class="layui-btn icon-btn" type="button">
+                            <i class="layui-icon">&#xe758;</i>关闭所有
+                        </button>
+                    </div>
+                </div>
+            </form>
+            <!-- 数据表格 -->
+            <table id="dataTable"></table>
+        </div>
+    </div>
+</div>
+
+<!-- 表格操作列 -->
+<script type="text/html" id="tableBarAuth">
+    <a shiro:hasPermission="right:update" class="layui-btn layui-btn-primary layui-btn-xs" lay-event="edit">修改</a>
+    <a shiro:hasPermission="right:delete" class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+    <a shiro:hasPermission="right:addchild" class="layui-btn layui-btn-xs" lay-event="addChild">添加子节点</a>
+</script>
+<!-- 表单弹窗 -->
+<script type="text/html" id="modelAuth">
+    <form id="dataForm" lay-filter="dataForm" class="layui-form model-form">
+        <input name="id" type="hidden"/>
+        <div class="layui-form-item">
+            <label class="layui-form-label layui-form-required">所属上级</label>
+            <div class="layui-input-block">
+                <div id="selectTree" class="ew-xmselect-tree"></div>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label layui-form-required">权限名称</label>
+            <div class="layui-input-block">
+                <input name="name" placeholder="请输入权限名称" type="text" class="layui-input" maxlength="50"
+                       lay-verType="tips" lay-verify="required" required/>
+            </div>
+        </div>
+        <div class="layui-col-md6">
+            <div class="layui-form-item">
+                <label class="layui-form-label layui-form-required">权限类型</label>
+                <div class="layui-input-block">
+                    <input name="type" type="radio" lay-filter="rightType" value="0" title="菜单" checked/>
+                    <input name="type" type="radio" lay-filter="rightType" value="1" title="按钮"/>
+                    <input name="type" type="radio" lay-filter="rightType" value="2" title="权限"/>
+                </div>
+            </div>
+        </div>
+        <div class="layui-col-md6 menuDiv">
+            <div class="layui-form-item">
+                <label class="layui-form-label">菜单图标</label>
+                <div class="layui-input-block">
+                    <input type="text" id="iconPicker" name="icon" placeholder="请输入菜单图标"  lay-filter="iconPicker" class="hide">
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item menuDiv">
+            <div class="layui-col-md6">
+                <label class="layui-form-label">菜单位置</label>
+                <div class="layui-input-block">
+                    <select name="position" lay-search>
+                        <option value="0" selected>基础功能</option>
+                        <option value="1" disabled="disabled">高级功能</option>
+                        <option value="2" disabled="disabled">扩展功能</option>
+                    </select>
+                </div>
+            </div>
+            <div class="layui-col-md6">
+                <label class="layui-form-label">
+                    菜单URL
+                    <i class="layui-icon layui-icon-tips" lay-tips="外部链接请加http前缀，如：http://www.baidu.com"
+                       lay-direction="1" lay-offset="0,-10px"></i>
+                </label>
+                <div class="layui-input-block">
+                    <input name="link" placeholder="请输入URL，外部链接请加HTTP://" type="text" class="layui-input"/>
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item rightDiv" style="display: none">
+            <label class="layui-form-label">权限标识</label>
+            <div class="layui-input-block">
+                <input name="flags" placeholder="请输入权限标识,多个以“，”隔开" type="text" class="layui-input"/>
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label layui-form-required">排序序号</label>
+            <div class="layui-input-block">
+                <input name="sortNumber" placeholder="请输入排序号" type="number" class="layui-input" min="0" max="1000"
+                       lay-verType="tips" lay-verify="required|number" required value="99"/>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">备注信息</label>
+            <div class="layui-input-block">
+                <input name="remark" placeholder="备注信息" type="text" class="layui-input" lay-verType="tips"/>
+            </div>
+        </div>
+        <div class="layui-form-item text-right">
+            <button class="layui-btn layui-btn-primary" type="button" ew-event="closePageDialog">取消</button>
+            <button class="layui-btn" lay-filter="saveBtn" lay-submit>保存</button>
+        </div>
+    </form>
+</script>
+<!-- js部分 -->
+<div th:replace="common/scripts :: common"></div>
+<div th:replace="common/scripts :: jquery"></div>
+<script th:inline="javascript">
+    layui.use(['layer', 'form', 'admin', 'treeTable',  'xmSelect','iconPicker'], function () {
+        var $ = layui.jquery;
+        var layer = layui.layer;
+        var form = layui.form;
+        var admin = layui.admin;
+        var treeTable = layui.treeTable;
+        var xmSelect = layui.xmSelect;
+        var iconPicker = layui.iconPicker;
+        var tbDataList = [];
+
+        // 渲染表格
+        var insTb = treeTable.render({
+            elem: '#dataTable',
+            tree: {
+                iconIndex: 1,  // 折叠图标显示在第几列
+                idName: 'id',  // 自定义id字段的名称
+                pidName: 'pid',  // 自定义标识是否还有子节点的字段名称
+                isPidData: true,  // 是否是pid形式数据
+            },
+            cellMinWidth: 100,
+            height: "full-98",
+            cols: [
+                {type: 'numbers'},
+                {field: 'name', title: '权限名称', width: 200},
+                {field: 'icon', title: '图标', templet: '<p><i class="{{d.icon}}"></i></p>', align: 'center', width: 80},
+                {field: 'link', title: '菜单URL'},
+                {field: 'flags', title: '标识组', width: 150},
+                {field: 'sortNumber', title: '排序', align: 'center', width: 80},
+                {
+                    title: '类型', templet: function (d) {
+                        var strs = [
+                            '<span class="layui-badge layui-badge-green">菜单</span>',
+                            '<span class="layui-badge layui-badge-blue">按钮</span>',
+                            '<span class="layui-badge layui-badge-yellow">权限</span>'
+                        ];
+                        return strs[d.type];
+                    }, align: 'center', width: 80
+                },
+                {templet: '#tableBarAuth', title: '操作', align: 'center', width: 260}
+            ],
+            reqData: function (data, callback) {
+                $.get('right/list', function (res) {
+                    tbDataList = res.data ? res.data : [];
+                    callback(res.data);
+                    insTb.foldAll();
+                });
+            }
+        });
+
+        /* 表格搜索 */
+        form.on('submit(searchBtn)', function (data) {
+            doTbSearch(data.field, 'id');
+            return false;
+        });
+
+        // 添加按钮点击事件
+        $('#addBtn').click(function () {
+            showEditModel();
+        });
+        // 展开所有
+        $('#expandAllBtn').click(function () {
+            insTb.expandAll();
+        });
+        // 关闭所有
+        $('#foldAllBtn').click(function () {
+            insTb.foldAll();
+        });
+
+        // 工具条点击事件
+        treeTable.on('tool(dataTable)', function (obj) {
+            var data = obj.data;
+            var layEvent = obj.event;
+            if (layEvent === 'edit') { // 修改
+                showEditModel(data);
+            } else if (layEvent === 'del') { // 删除
+                doDel(data.id, data.name);
+            } else if (layEvent === 'addChild') { // 添加子节点
+                //只把自己的ID设置成PID传过去
+                var parentData = {};
+                parentData.pid = data.id;
+                showEditModel(parentData);
+            }
+        });
+
+        // 显示表单弹窗
+        function showEditModel(mData) {
+            admin.open({
+                type: 1,
+                area: '800px',
+                title: (mData && mData.id ? '修改' : (mData && mData.pid?'添加子节点':'添加')) + '权限',
+                content: $('#modelAuth').html(),
+                success: function (layero, dIndex) {
+                    // 回显表单数据
+                    form.val('dataForm', mData);
+                    // 回显时渲染菜单和按钮的显示
+                    showRightView(mData?(mData.type?mData.type:0):0);
+                    // 添加菜单选择点击事件
+                    form.on("radio(rightType)", function (data) {
+                        showRightView(data.value);
+                    });
+
+                    //渲染图标选择
+                    iconPicker.render({
+                        // 选择器，推荐使用input
+                        elem: '#iconPicker',
+                        // 数据类型：fontClass/unicode，推荐使用fontClass
+                        type: 'fontClass',
+                        // 是否开启搜索：true/false，默认true
+                        search: true,
+                        // 是否开启分页：true/false，默认true
+                        page: true,
+                        // 每页显示数量，默认12
+                        limit: 12,
+                        // 点击回调
+                        click: function (data) {
+                            $('#iconPicker').val("layui-icon "+data.icon)
+                        },
+                        // 渲染成功后的回调
+                        success: function(d) {
+                            console.log("d="+d);
+                        }
+                    });
+
+                    // 渲染下拉树
+                    var insXmSel = xmSelect.render({
+                        el: '#selectTree',
+                        height: '250px',
+                        data: insTb.options.data,
+                        initValue: mData ? [mData.pid] : [],
+                        model: {label: {type: 'text'}},
+                        prop: {
+                            name: 'name',
+                            value: 'id'
+                        },
+                        radio: true,
+                        clickClose: true,
+                        tree: {
+                            show: true,
+                            indent: 15,
+                            strict: false,
+                            expandedKeys: true
+                        }
+                    });
+
+                    if(mData){
+                        if ([[${session.session_runtime}]] == 'demo') return layer.msg('演示环境不允许操作，请联系管理员', {icon: 4});
+                    }
+                    // 表单提交事件
+                    form.on('submit(saveBtn)', function (data) {
+                        data.field.pid = insXmSel.getValue('valueStr');
+                        var loadIndex = layer.load(2);
+                        $.post(mData && mData.id ?'right/update':'right/save', data.field, function (res) {
+                            layer.close(loadIndex);
+                            if (res.code === 0) {
+                                layer.close(dIndex);
+                                layer.msg(res.msg, {icon: 1});
+                                insTb.refresh();
+                            } else {
+                                layer.msg(res.msg, {icon: 2});
+                            }
+                        }, 'json');
+                        return false;
+                    });
+                    // 弹窗不出现滚动条
+                    $(layero).children('.layui-layer-content').css('overflow', 'visible');
+                }
+            });
+        }
+
+        // 删除
+        window.doDel = function(authorityId, authorityName){
+            if ([[${session.session_runtime}]] == 'demo') return layer.msg('演示环境不允许操作，请联系管理员', {icon: 4});
+            layer.confirm('确定要删除“' + authorityName + '”吗？', {
+                skin: 'layui-layer-admin',
+                shade: .1
+            }, function (index) {
+                layer.close(index);
+                layer.load(2);
+                $.post('right/delete', {
+                    id: authorityId
+                }, function (res) {
+                    layer.closeAll('loading');
+                    if (res.code == 0) {
+                        layer.msg(res.msg, {icon: 1});
+                        insTb.refresh();
+                    } else {
+                        layer.msg(res.msg, {icon: 2});
+                    }
+                }, 'json');
+            });
+        }
+
+
+        /* 搜索表格数据 */
+        function doTbSearch(field, idName) {
+            var ids = [], isClear = true;
+            for (var i = 0; i < tbDataList.length; i++) {
+                var item = tbDataList[i], flag = true;
+                for (var f in field) {
+                    if (!field.hasOwnProperty(f)) continue;
+                    if (!field[f]) continue;
+                    isClear = false;
+                    if (!item[f] || item[f].indexOf(field[f]) === -1) {
+                        flag = false;
+                        break;
+                    }
+                }
+                if (flag) ids.push(item[idName]);
+            }
+            if (isClear) {
+                insTb.clearFilter();
+            } else {
+                insTb.filterData(ids);
+            }
+        }
+    });
+
+    function showRightView(type) {
+        //菜单
+        if(type == 0){
+            $(".rightDiv").hide();
+            $(".menuDiv").show();
+        }else{
+            $(".menuDiv").hide();
+            $(".rightDiv").show();
+        }
+    }
+</script>
+</body>
+</html>

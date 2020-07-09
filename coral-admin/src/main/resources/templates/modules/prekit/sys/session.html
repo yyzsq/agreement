@@ -1,0 +1,143 @@
+﻿
+<!DOCTYPE html>
+<html lang="zh-cn" class="fullscreen-bg" xmlns:th="http://www.thymeleaf.org"
+      xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<head th:replace="common/links :: common_header(~{::title},~{},~{})">
+    <title>系统会话表-模块</title>
+</head>
+<body>
+<!-- 页面加载loading -->
+<div class="page-loading">
+    <div class="ball-loader">
+        <span></span><span></span><span></span><span></span>
+    </div>
+</div>
+<!-- 正文开始 -->
+<div class="layui-fluid">
+    <div class="layui-card">
+        <div class="layui-card-body">
+            <!-- 表格工具栏 -->
+            <div class="layui-form toolbar">
+                <div class="layui-form-item text-right">
+                    <div class="layui-inline pull-left">
+<!--                        <button class="layui-btn layui-btn-danger icon-btn"><i-->
+<!--                                class="layui-icon">&#xe640;</i>批量下线-->
+<!--                        </button>-->
+                    </div>
+                    <div class="layui-inline">
+                        <input tb-search="dataTable" class="layui-input icon-search" type="text"/>
+                    </div>
+                    <div class="layui-inline">
+                        <div class="layui-btn-group">
+                            <button shiro:hasPermission="session:export"
+                                    tb-export="dataTable" class="layui-btn layui-btn-primary icon-btn">
+                                <i class="layui-icon">&#xe67d;</i>
+                            </button>
+                            <button tb-refresh="dataTable" class="layui-btn layui-btn-primary icon-btn">
+                                <i class="layui-icon">&#xe9aa;</i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- 数据表格 -->
+            <table id="dataTable" lay-filter="dataTable"></table>
+        </div>
+    </div>
+</div>
+
+<!-- 表格操作列 -->
+<script type="text/html" id="tableBar">
+    <a shiro:hasPermission="session:kickout" class="layui-btn layui-btn-danger layui-btn-xs" lay-event="kickout">强制下线</a>
+</script>
+<!-- js部分 -->
+<div th:replace="common/scripts :: common"></div>
+<div th:replace="common/scripts :: custom"></div>
+<script>
+    layui.use(['layer', 'form', 'table', 'util', 'laydate', 'tableX', 'admin'], function () {
+        var $ = layui.jquery;
+        var layer = layui.layer;
+        var table = layui.table;
+        var util = layui.util;
+        var tableX = layui.tableX;
+
+        /* 渲染表格 */
+        var cols = [
+            {type: 'checkbox'},
+            {field: 'sessionId', title: '会话ID', align: 'center'},
+            {field: 'username', title: '用户名', align: 'center'},
+            {field: 'userIp', title: '用户IP', align: 'center'},
+            {field: 'clientOs', title: '操作系统', align: 'center'},
+            {field: 'clientDevice', title: '设备类型', align: 'center'},
+            {field: 'browser', title: '浏览器', align: 'center'},
+            {
+                field: 'startAccessTime', title: '登陆时间', templet: function (d) {
+                    return util.toDateString(d.startAccessTime);
+                }, sort: true
+            },
+            {
+                field: 'lastAccessTime', title: '最后访问时间', templet: function (d) {
+                    return util.toDateString(d.lastAccessTime);
+                }, sort: true
+            },
+            {title: '操作', toolbar: '#tableBar', align: 'center', minWidth: 50}
+        ];
+
+        // 前端分页
+        var insTb = tableX.renderFront({
+            elem: '#dataTable',
+            url: 'session/list',
+            page: {groups: 6},
+            cellMinWidth: 100,
+            title: '在线用户表',
+            cols: [cols],
+            done: function () {
+            }
+        });
+
+
+        /* 表格工具条点击事件 */
+        table.on('tool(dataTable)', function (obj) {
+            if (obj.event === 'kickout') { // 下线
+                kickout(obj.data);
+            }
+        });
+
+        /* 表格头工具栏点击事件 */
+        table.on('toolbar(dataTable)', function (obj) {
+            if (obj.event === 'kickout') { // 删除
+                var checkRows = table.checkStatus('dataTable');
+                if (checkRows.data.length === 0) {
+                    layer.msg('请选择要删除的数据', {icon: 2});
+                    return;
+                }
+                kickout(obj.data);
+            }
+        });
+
+
+        /* 强制下线 */
+        window.kickout = function (data) {
+            layer.confirm('确定要强制下线该用户吗？', {
+                skin: 'layui-layer-admin',
+                shade: .1
+            }, function (i) {
+                layer.close(i);
+                var loadIndex = layer.load(2);
+                $.post('session/kickout', {
+                    sessionId: data ? data.sessionId : '',
+                }, function (res) {
+                    layer.close(loadIndex);
+                    if (res.code === 0) {
+                        layer.msg(res.msg, {icon: 1});
+                        $(".layui-laypage-btn")[0].click();
+                    } else {
+                        layer.msg(res.msg, {icon: 2});
+                    }
+                }, 'json');
+            });
+        }
+    });
+</script>
+</body>
+</html>

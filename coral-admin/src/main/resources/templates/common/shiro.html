@@ -1,0 +1,83 @@
+
+<!DOCTYPE html>
+<html lang="zh-cn" class="fullscreen-bg" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<div th:fragment="userShiroTag">
+    <script>
+        //全局变量 Shiro权限
+        var shiroSave = false;
+        var shiroDelete = false;
+        var shiroUpdate = false;
+        var shiroInfo = false;
+    </script>
+
+    <!-- 设置Shiro权限变量 -->
+    <shiro:hasAllPermissions name="user:save">
+        <script>shiroSave = true;</script>
+    </shiro:hasAllPermissions>
+    <shiro:hasAllPermissions name="user:delete">
+        <script>shiroDelete = true;</script>
+    </shiro:hasAllPermissions>
+    <shiro:hasAllPermissions name="user:update">
+        <script>shiroUpdate = true;</script>
+    </shiro:hasAllPermissions>
+</div>
+<div th:fragment="roleShiroTag">
+    <script>
+        //全局变量 Shiro权限
+        var shiroSave = false;
+        var shiroDelete = false;
+        var shiroUpdate = false;
+        var shiroInfo = false;
+    </script>
+
+    <!-- 设置Shiro权限变量 -->
+    <shiro:hasAllPermissions name="role:save">
+        <script>shiroSave = true;</script>
+    </shiro:hasAllPermissions>
+    <shiro:hasAllPermissions name="role:delete">
+        <script>shiroDelete = true;</script>
+    </shiro:hasAllPermissions>
+    <shiro:hasAllPermissions name="role:update">
+        <script>shiroUpdate = true;</script>
+    </shiro:hasAllPermissions>
+</div>
+<div th:fragment="demoShiroTag">
+    <script>
+        //全局变量 Shiro权限
+        var shiroSave = false;
+        var shiroDelete = false;
+        var shiroUpdate = false;
+        var shiroInfo = false;
+    </script>
+
+    <!-- 设置Shiro权限变量 -->
+    <shiro:hasAllPermissions name="demo:save">
+        <script>shiroSave = true;</script>
+    </shiro:hasAllPermissions>
+    <shiro:hasAllPermissions name="demo:delete">
+        <script>shiroDelete = true;</script>
+    </shiro:hasAllPermissions>
+    <shiro:hasAllPermissions name="demo:update">
+        <script>shiroUpdate = true;</script>
+    </shiro:hasAllPermissions>
+</div>
+<div th:fragment="memberShiroTag">
+    <script>
+        //全局变量 Shiro权限
+        var shiroSave = false;
+        var shiroDelete = false;
+        var shiroUpdate = false;
+        var shiroInfo = false;
+    </script>
+
+    <!-- 设置Shiro权限变量 -->
+    <shiro:hasAllPermissions name="member:save">
+        <script>shiroSave = true;</script>
+    </shiro:hasAllPermissions>
+    <shiro:hasAllPermissions name="member:delete">
+        <script>shiroDelete = true;</script>
+    </shiro:hasAllPermissions>
+    <shiro:hasAllPermissions name="member:update">
+        <script>shiroUpdate = true;</script>
+    </shiro:hasAllPermissions>
+</div>

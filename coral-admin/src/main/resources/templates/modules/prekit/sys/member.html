@@ -1,0 +1,318 @@
+﻿
+<!DOCTYPE html>
+<html lang="zh-cn" class="fullscreen-bg" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<head th:replace="common/links :: common_header(~{::title},~{},~{})">
+    <title>会员管理</title>
+</head>
+<body>
+<!-- 页面加载loading -->
+<div class="page-loading">
+    <div class="ball-loader">
+        <span></span><span></span><span></span><span></span>
+    </div>
+</div>
+<!-- 正文开始 -->
+<div class="layui-fluid">
+    <div class="layui-card">
+        <div class="layui-card-body">
+            <!-- 表格工具栏 -->
+            <form class="layui-form toolbar">
+                <div class="layui-form-item">
+                    <div class="layui-inline">
+                        <label class="layui-form-label">会员账号:</label>
+                        <div class="layui-input-inline">
+                            <input name="account" class="layui-input" placeholder="请输入会员账号"/>
+                        </div>
+                    </div>
+                    <div class="layui-inline">
+                        <label class="layui-form-label">会员昵称:</label>
+                        <div class="layui-input-inline">
+                            <input name="nickname" class="layui-input" placeholder="请输入会员昵称"/>
+                        </div>
+                    </div>
+                    <div class="layui-inline">
+                        <label class="layui-form-label">注册日期:</label>
+                        <div class="layui-input-inline">
+                            <input name="dateRange" class="layui-input icon-date" placeholder="选择日期范围"
+                                   autocomplete="off"/>
+                        </div>
+                    </div>
+                    <div class="layui-inline">&emsp;
+                        <button class="layui-btn icon-btn" lay-filter="searchBtn" lay-submit>
+                            <i class="layui-icon">&#xe615;</i>搜索
+                        </button>&nbsp;
+                        <button shiro:hasPermission="demo:export" id="exportBtn" class="layui-btn icon-btn" type="button">
+                            <i class="layui-icon">&#xe67d;</i>导出
+                        </button>
+                    </div>
+                </div>
+            </form>
+            <!-- 数据表格 -->
+            <table id="dataTable" lay-filter="dataTable"></table>
+        </div>
+    </div>
+</div>
+
+<!-- 表格操作列 -->
+<script type="text/html" id="tableBar">
+    <a shiro:hasPermission="demo:update" class="layui-btn layui-btn-primary layui-btn-xs" lay-event="edit">修改</a>
+    <a shiro:hasPermission="demo:delete" class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+</script>
+
+<!-- 表格状态列 -->
+<script type="text/html" id="isOauth">
+    <p>{{d.isOauth==0?'否':'是'}}</p>
+</script>
+<!-- 表格状态列 -->
+<script type="text/html" id="channel">
+    {{#if(d.channel=== 1){ }}
+        手动添加
+    {{# }else if(d.channel=== 2){ }}
+        自助注册
+    {{# }else if(d.channel=== 3){ }}
+        Oauth授权登录
+    {{# }else{ }}
+        未知
+    {{# } }}
+</script>
+<script type="text/html" id="thirdParty">
+    {{#if(d.thirdParty=== 1){ }}
+        码云gitee
+    {{# }else if(d.thirdParty=== 2){ }}
+        GitHub
+    {{# }else if(d.thirdParty=== 3){ }}
+        微信
+    {{# }else if(d.thirdParty=== 4){ }}
+        QQ
+    {{# }else if(d.thirdParty=== 5){ }}
+        微博
+    {{# }else if(d.thirdParty=== 6){ }}
+        支付宝
+    {{# }else if(d.thirdParty=== 7){ }}
+        淘宝
+    {{# }else{ }}
+        未知
+    {{# } }}
+</script>
+<!-- 表格状态列 -->
+<script type="text/html" id="status">
+    <p>{{d.status==0?'启用':'禁用'}}</p>
+</script>
+<!-- 表格状态列 -->
+<script type="text/html" id="avatarUrl">
+        {{#if(d.avatarUrl === null){ }}
+            <img width="50" height="30" src="https://portrait.gitee.com/uploads/avatars/user/890/2671379_gemteam_1586092629.png">
+        {{# }else{ }}
+            <img width="50" height="30" src="{{ d.avatarUrl }}">
+        {{# } }}
+
+</script>
+
+<!-- 表单弹窗 -->
+<script type="text/html" id="formDialog">
+    <form id="dataForm" lay-filter="dataForm" class="layui-form model-form">
+        <input name="id" type="hidden"/>
+        <!--手动添加-->
+        <input name="channel" type="hidden" value="1"/>
+        <div class="layui-form-item">
+            <label class="layui-form-label layui-form-required">会员账号:</label>
+            <div class="layui-input-block">
+                <input name="account" placeholder="请输入会员账号" class="layui-input"
+                       lay-verType="tips" lay-verify="required" required/>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label layui-form-required">会员昵称:</label>
+            <div class="layui-input-block">
+                <input name="nickname" placeholder="请输入会员昵称" class="layui-input"
+                       lay-verType="tips" lay-verify="required" required/>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label layui-form-required">手机号码:</label>
+            <div class="layui-input-block">
+                <input name="phone" placeholder="请输入手机号" class="layui-input"
+                       lay-verType="tips" lay-verify="required" required/>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label layui-form-required">电子邮箱:</label>
+            <div class="layui-input-block">
+                <input name="email" placeholder="请输入电子邮箱" class="layui-input"
+                       lay-verType="tips" lay-verify="required" required/>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label layui-form-required">账号状态:</label>
+            <div class="layui-input-block">
+                <input type="radio" name="status" value="0" title="启用 " checked/>
+                <input type="radio" name="status" value="1" title="禁用"/>
+            </div>
+        </div>
+        <div class="layui-form-item text-right">
+            <button class="layui-btn" lay-filter="saveBtn" lay-submit>保存</button>
+            <button class="layui-btn layui-btn-primary" type="button" ew-event="closeDialog">取消</button>
+        </div>
+    </form>
+</script>
+
+<!-- js部分1 -->
+<div th:replace="common/scripts :: common"></div>
+<div th:replace="common/scripts :: custom"></div>
+<div th:replace="common/shiro :: memberShiroTag"></div>
+<script>
+    layui.use(['layer', 'form', 'table', 'util', 'laydate', 'tableX','admin'], function () {
+        var $ = layui.jquery;
+        var layer = layui.layer;
+        var form = layui.form;
+        var table = layui.table;
+        var util = layui.util;
+        var laydate = layui.laydate;
+        var tableX = layui.tableX;
+        var admin = layui.admin;
+
+        /* 渲染表格 */
+        var cols = [
+            {type: 'checkbox'},
+            {field: 'account', title: '会员账号'},
+            {field: 'nickname', title: '会员昵称'},
+            {field: 'avatarUrl', title: '会员头像',align: 'center',templet:'#avatarUrl'},
+            {field: 'channel', title: '注册渠道', templet: '#channel'},
+            {field: 'status', title: '账号状态', templet: '#status', align: 'center'},
+            {field: 'isOauth', title: '是否OAuth', templet: '#isOauth', align: 'center'},
+            {field: 'thirdParty', title: '第三方平台', templet: '#thirdParty'},
+            {title: '操作', toolbar: '#tableBar', align: 'center', minWidth: 200}
+        ];
+
+        var insTb = table.render({
+            elem: '#dataTable',
+            url: 'member/page',
+            page: true,
+            toolbar: [shiroToolbar(shiroSave,shiroDelete)].join(''),
+            cellMinWidth: 100,
+            cols: [cols],
+            done: function () {
+                // 绑定鼠标右键
+                //tableX.bindCtxMenu('dataTable', shiroBindCtxMenu(shiroDelete,shiroUpdate));
+            }
+        });
+
+        /* 渲染时间选择 */
+        laydate.render({
+            elem: 'input[name="dateRange"]',
+            type: 'date',
+            range: true,
+            trigger: 'click'
+        });
+
+
+        /* 表格工具条点击事件 */
+        table.on('tool(dataTable)', function (obj) {
+            if (obj.event === 'edit') { // 修改
+                showEditModel(obj.data);
+            } else if (obj.event === 'del') { // 删除
+                doDel(obj.data);
+            } else if (obj.event === 'reset') { // 重置密码
+                resetPsw(obj);
+            }
+        });
+
+        /* 表格头工具栏点击事件 */
+        table.on('toolbar(dataTable)', function (obj) {
+            if (obj.event === 'add') { // 添加
+                showEditModel();
+            } else if (obj.event === 'del') { // 删除
+                var checkRows = table.checkStatus('dataTable');
+                if (checkRows.data.length === 0) {
+                    layer.msg('请选择要删除的数据', {icon: 2});
+                    return;
+                }
+                var ids = checkRows.data.map(function (d) {
+                    return d.id;
+                });
+                doDel({ids: ids});
+            }
+        });
+
+        // 显示编辑弹窗
+        function showEditModel(mRole) {
+            admin.open({
+                type: 1,
+                area: '800px',
+                title: (mRole ? '修改' : '添加'),
+                content: $('#formDialog').html(),
+                success: function (layero, dIndex) {
+                    form.val('dataForm', mRole);  // 回显数据
+                    // 添加权限信息
+                    form.on('submit(saveBtn)', function (data) {
+                        $.post(mRole?'member/update':'member/save', data.field, function (res) {
+                            if (res.code == 0) {
+                                layer.close(dIndex);
+                                layer.msg(res.msg, {icon: 1});
+                                insTb.reload({page: {curr: 1}});
+                            } else {
+                                layer.msg(res.msg, {icon: 2});
+                            }
+                        }, 'json');
+                        return false;
+                    });
+                }
+            });
+        }
+
+        /* 表格搜索 */
+        form.on('submit(searchBtn)', function (data) {
+            if (data.field.dateRange) {
+                var searchDate = data.field.dateRange.split(' - ');
+                data.field.startDate = searchDate[0];
+                data.field.endDate = searchDate[1];
+            } else {
+                data.field.startDate = '';
+                data.field.endDate = '';
+            }
+            data.field.dateRange = undefined;
+            insTb.reload({where: data.field, page: {curr: 1}});
+            return false;
+        });
+
+        /* 导出excel */
+        $('#exportBtn').click(function () {
+            var checkRows = table.checkStatus('dataTable');
+            if (checkRows.data.length === 0) {
+                layer.msg('请选择要导出的数据', {icon: 2});
+            } else {
+                tableX.exportDataX({
+                    cols: insTb.config.cols,
+                    data: checkRows.data,
+                    fileName: '导出数据'
+                });
+            }
+        });
+
+
+        /* 删除 */
+        window.doDel = function(obj){
+            layer.confirm('确定要删除选中数据吗？', {
+                skin: 'layui-layer-admin',
+                shade: .1
+            }, function (i) {
+                layer.close(i);
+                var loadIndex = layer.load(2);
+                $.post('member/delete', {
+                    id: obj ? obj.id : '',
+                    ids: obj.ids ? obj.ids.join(',') : ''
+                }, function (res) {
+                    layer.close(loadIndex);
+                    if (res.code === 0) {
+                        layer.msg(res.msg, {icon: 1});
+                        insTb.reload({page: {curr: 1}});
+                    } else {
+                        layer.msg(res.msg, {icon: 2});
+                    }
+                }, 'json');
+            });
+        }
+    });
+</script>
+</body>
+</html>

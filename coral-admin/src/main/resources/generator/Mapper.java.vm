@@ -1,0 +1,20 @@
+
+package ${package}.mapper;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.gemframework.model.entity.po.${className};
+import org.springframework.stereotype.Repository;
+
+/**
+ * @Title: ${className}Mapper
+ * @Date: ${datetime}
+ * @Version: v1.0
+ * @Description: ${comments}持久层
+ * @Author: ${author}
+ * @Email: ${email}
+ * @Copyright: Copyright (c) 2020 wanyong
+ * @Company: www.gemframework.com
+ */
+@Repository
+public interface ${className}Mapper extends BaseMapper<${className}> {
+
+}

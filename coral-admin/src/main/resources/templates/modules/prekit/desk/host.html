@@ -1,0 +1,273 @@
+
+<!DOCTYPE html>
+<html lang="zh-cn" class="fullscreen-bg" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="common/links :: common_header(~{::title},~{},~{})">
+    <title>主机监控</title>
+</head>
+<body>
+<!-- 正文开始 -->
+<!-- 加载动画，移除位置在common.js中 -->
+<div class="page-loading" style="display: none;">
+    <div class="ball-loader">
+        <span></span><span></span><span></span><span></span>
+    </div>
+</div>
+
+<!-- 正文开始 -->
+<div class="layui-fluid">
+    <div class="layui-row layui-col-space15">
+
+        <div class="layui-col-lg6">
+            <div class="layui-card">
+                <div class="layui-card-header">CPU信息</div>
+                <div class="layui-card-body">
+                    <table class="layui-table layui-text">
+                        <thead>
+                        <tr>
+                            <th>属性</th>
+                            <td>值</td>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <td>核心数</td>
+                            <td>2</td>
+                        </tr>
+                        <tr>
+                            <td>用户使用率</td>
+                            <td>16.96%</td>
+                        </tr>
+                        <tr>
+                            <td>系统使用率</td>
+                            <td id="sysUsage">12.17%</td>
+                        </tr>
+                        <tr>
+                            <td>当前空闲率</td>
+                            <td>70.43%</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="layui-col-lg6">
+            <div class="layui-card">
+                <div class="layui-card-header">内存信息</div>
+                <div class="layui-card-body">
+                    <table class="layui-table layui-text">
+                        <thead>
+                        <tr>
+                            <th>属性</th>
+                            <th>内存</th>
+                            <th>JVM</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <td>总内存</td>
+                            <td>7.64GB</td>
+                            <td>1909.5MB</td>
+                        </tr>
+                        <tr>
+                            <td>已用内存</td>
+                            <td>5.24GB</td>
+                            <td>1434.4MB</td>
+                        </tr>
+                        <tr>
+                            <td>剩余内存</td>
+                            <td>2.4GB</td>
+                            <td>475.1MB</td>
+                        </tr>
+                        <tr>
+                            <td>使用率</td>
+                            <td id="memUsage">68.64%</td>
+                            <td id="jvmUsage">75.12%</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="layui-col-lg12">
+            <div class="layui-card">
+                <div class="layui-card-header">JAVA虚拟机信息</div>
+                <div class="layui-card-body">
+                    <table class="layui-table layui-text">
+                        <tbody>
+                        <tr>
+                            <td class="layui-table-header">Jvm名称</td>
+                            <td>OpenJDK 64-Bit Server VM</td>
+                            <td class="layui-table-header">Java版本</td>
+                            <td>1.8.0_111</td>
+                        </tr>
+                        <tr>
+                            <td class="layui-table-header">启动时间</td>
+                            <td>2020-01-13 18:17:05</td>
+                            <td class="layui-table-header">运行时长</td>
+                            <td>63天1小时45分钟</td>
+                        </tr>
+                        <tr>
+                            <td colspan="1" class="layui-table-header">安装路径</td>
+                            <td colspan="3">/usr/lib/jvm/java-8-openjdk-amd64/jre</td>
+                        </tr>
+                        <tr>
+                            <td colspan="1" class="layui-table-header">项目路径</td>
+                            <td colspan="3">/</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="layui-col-lg12">
+            <div class="layui-card">
+                <div class="layui-card-header">服务器信息</div>
+                <div class="layui-card-body">
+                    <table class="layui-table layui-text">
+                        <tbody>
+                        <tr>
+                            <td class="layui-table-header">服务器名称</td>
+                            <td>localhost</td>
+                            <td class="layui-table-header">操作系统</td>
+                            <td>Linux</td>
+                        </tr>
+                        <tr>
+                            <td class="layui-table-header">服务器IP</td>
+                            <td>127.0.0.1</td>
+                            <td class="layui-table-header">系统架构</td>
+                            <td>amd64</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="layui-col-lg12">
+            <div class="layui-card">
+                <div class="layui-card-header">磁盘信息</div>
+                <div class="layui-card-body">
+                    <table class="layui-table layui-text">
+                        <thead>
+                        <tr>
+                            <th>盘符路径</th>
+                            <th>文件系统</th>
+                            <th>盘符类型</th>
+                            <th>总大小</th>
+                            <th>可用大小</th>
+                            <th>已用大小</th>
+                            <th>已用百分比</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <td>/</td>
+                            <td>overlay</td>
+                            <td>/</td>
+                            <td>39.2 GBGB</td>
+                            <td>18.0 GBGB</td>
+                            <td>21.3 GBGB</td>
+                            <td>54.15%</td>
+                        </tr>
+                        <tr>
+                            <td>/home/</td>
+                            <td>ext4</td>
+                            <td>/dev/vda1</td>
+                            <td>39.2 GBGB</td>
+                            <td>18.0 GBGB</td>
+                            <td>21.3 GBGB</td>
+                            <td>54.15%</td>
+                        </tr>
+                        <tr>
+                            <td>/etc/timezone</td>
+                            <td>ext4</td>
+                            <td>/dev/vda1</td>
+                            <td>39.2 GBGB</td>
+                            <td>18.0 GBGB</td>
+                            <td>21.3 GBGB</td>
+                            <td>54.15%</td>
+                        </tr>
+                        <tr>
+                            <td>/etc/localtime</td>
+                            <td>ext4</td>
+                            <td>/dev/vda1</td>
+                            <td>39.2 GBGB</td>
+                            <td>18.0 GBGB</td>
+                            <td>21.3 GBGB</td>
+                            <td>54.15%</td>
+                        </tr>
+                        <tr>
+                            <td>/etc/resolv.conf</td>
+                            <td>ext4</td>
+                            <td>/dev/vda1</td>
+                            <td>39.2 GBGB</td>
+                            <td>18.0 GBGB</td>
+                            <td>21.3 GBGB</td>
+                            <td>54.15%</td>
+                        </tr>
+                        <tr>
+                            <td>/etc/hostname</td>
+                            <td>ext4</td>
+                            <td>/dev/vda1</td>
+                            <td>39.2 GBGB</td>
+                            <td>18.0 GBGB</td>
+                            <td>21.3 GBGB</td>
+                            <td>54.15%</td>
+                        </tr>
+                        <tr>
+                            <td>/etc/hosts</td>
+                            <td>ext4</td>
+                            <td>/dev/vda1</td>
+                            <td>39.2 GBGB</td>
+                            <td>18.0 GBGB</td>
+                            <td>21.3 GBGB</td>
+                            <td>54.15%</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- js部分 -->
+<div th:replace="common/scripts :: common"></div>
+<script>
+    layui.use(['layer'], function () {
+        var $ = layui.jquery;
+        var layer = layui.layer;
+
+        var cpuUsage = 12.17;
+        var memUsage = 68.64;
+        var jvmUsage = 75.12;
+
+        var msg = "";
+
+        if (cpuUsage >= 80) {
+            $("#sysUsage").addClass("text-danger");
+            msg += "提示：CPU使用率过高！</br>";
+        }
+
+        if (memUsage >= 80) {
+            $("#memUsage").addClass("text-danger");
+            msg += "提示：内存使用率过高！</br>";
+        }
+
+        if (jvmUsage >= 80) {
+            $("#jvmUsage").addClass("text-danger");
+            msg += "提示：jvm使用率过高！";
+        }
+
+        if (msg !== "") {
+            layer.msg(msg)
+        }
+
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,42 @@
+
+package ${package}.model.entity.po;
+#if(${hasBigDecimal})
+import java.math.BigDecimal;
+#end
+import com.baomidou.mybatisplus.annotation.TableName;
+import com.gemframework.model.common.BaseEntityPo;
+import lombok.Data;
+
+/**
+ * @Title: ${className}
+ * @Date: ${datetime}
+ * @Version: v1.0
+ * @Description: ${comments}实体
+ * @Author: ${author}
+ * @Email: ${email}
+ * @Copyright: Copyright (c) 2020 wanyong
+ * @Company: www.gemframework.com
+ */
+
+@TableName("${tableName}")
+@Data
+public class ${className} extends BaseEntityPo {
+
+	#foreach ($column in $columns)
+		#if (${column.attrNameLow} eq "id"
+		|| ${column.attrNameLow} eq "remark"
+		|| ${column.attrNameLow} eq "sortNumber"
+		|| ${column.attrNameLow} eq "createTime"
+		|| ${column.attrNameLow} eq "updateTime"
+		|| ${column.attrNameLow} eq "deleted"
+		)
+		#else
+		/**
+		 * $column.comments
+		 */
+		private $column.attrType $column.attrNameLow;
+		#end
+	#end
+
+}
+

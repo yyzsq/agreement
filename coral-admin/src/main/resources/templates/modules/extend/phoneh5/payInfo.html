@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="zh-cn" class="fullscreen-bg" xmlns:th="http://www.thymeleaf.org"
+	  xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<html>
+<head>
+<title>订单支付</title>
+<!-- for-mobile-apps -->
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+<!-- //for-mobile-apps -->
+<!-- font-awesome icons -->
+</head>
+<link th:href="@{/coral/css/jiesuan.css}" href="../../../../static/coral/css/jiesuan.css" rel="stylesheet"/>
+<script type="text/javascript" th:src="@{/assets/js/jquery-3.2.1.min.js}" src="../../../../static/assets/js/jquery-3.2.1.min.js"></script>
+<body>
+	<div class="main">
+		<h1>合同到期续费支付</h1>
+		<div class="w3_agile_main_grids">
+			<div class="agile_main_grid_left">
+				<div class="w3_agileits_main_grid_left_grid">
+					<h2>支付总费用</h2>
+					<h3>￥<span name="amountMoney"></span><span>元</span></h3>
+					
+				</div>
+				<div class="agileinfo_main_grid_left_grid zdxx" >
+					<h3>账单信息</h3>
+					
+					<ul>
+						<li><span class="title">合同编号：</span> <span name="contractId"></span></li>
+						<li><span class="title">客户名称：</span> <span name="customerName"></span></li>
+						
+					</ul>
+				
+					<div class="w3layouts_help_desk">
+						<a href="javascript:void(0);" id="toWxPay">确认支付</a>
+					</div>
+				</div>
+				<div class="agileinfo_main_grid_left_grid chenggong" style="display:none;" >
+					<div class="w3layouts_help_desk" style="vertical-align: middle;">
+						<img width="50px" src="../../../../static/coral/images/paysuccess.png" style="vertical-align: middle;padding-right: 20px;" th:src="@{/coral/images/paysuccess.png}" /><span style="vertical-align: middle;">支付成功</span>
+					</div>
+				</div>
+				<div class="agileinfo_main_grid_left_grid shibai" style="display:none;">
+					<div class="w3layouts_help_desk" style="vertical-align: middle;">
+						<img width="50px" src="../../../../static/coral/images/payerreo.png" style="vertical-align: middle;padding-right: 20px;" th:src="@{/coral/images/payerreo.png}" /><span style="vertical-align: middle;">支付失败</span>
+					</div>
+				</div>
+				<div class="agileinfo_main_grid_left_grid quxiao" style="display:none;">
+					<div class="w3layouts_help_desk" style="vertical-align: middle;">
+						<img width="50px" src="../../../../static/coral/images/payquxiao.png" style="vertical-align: middle;padding-right: 20px;" th:src="@{/coral/images/payquxiao.png}" /><span style="vertical-align: middle;">取消支付</span>
+					</div>
+				</div>
+			</div>
+			
+			<div class="clear"> </div>
+		</div>
+	
+	</div>
+	<script>
+        var appId = null;
+        var timeStamp = null;
+        var nonceStr = null;
+        var package = null;
+        var signType = null;
+        var paySign = null;
+        $(function () {
+
+                $.post("jiesuan/getContractInfo",function(res){
+                        if(res.code=="0"){
+                            $("[name='amountMoney']").text(res.data.amountReceived);
+                            $("[name='contractId']").text(res.data.contractId);
+                            $("[name='customerName']").text(res.data.customerName);
+
+                        }else{
+                            alert("网络错误，请稍后重试！");
+                        }
+
+                    },
+                    "json");
+
+        		$("#toWxPay").click(function (obj) {
+                    $.post("jiesuan/payZhifu",function(res){
+
+                            if(res.code=="0"){
+                                var data=res.data;
+                                console.log(res)
+                                appId = data.appId;
+                                timeStamp = data.timeStamp;
+                                nonceStr = data.nonceStr;
+                                package = data.package;
+                                signType = data.signType;
+                                paySign = data.paySign;
+                                console.log(res)
+                                if (typeof WeixinJSBridge == "undefined"){
+                                    if( document.addEventListener ){
+                                        document.addEventListener('WeixinJSBridgeReady', onBridgeReady, false);
+                                    }else if (document.attachEvent){
+                                        document.attachEvent('WeixinJSBridgeReady', onBridgeReady);
+                                        document.attachEvent('onWeixinJSBridgeReady', onBridgeReady);
+                                    }
+                                }else{
+                                    onBridgeReady();
+                                }
+                            }else{
+                                alert("网络错误，请稍后重试！");
+                            }
+
+                        },
+                        "json");
+                })
+
+        });
+
+        function onBridgeReady(){
+            WeixinJSBridge.invoke( 'getBrandWCPayRequest', {
+                    "appId":appId,     //公众号名称,由商户传入
+                    "timeStamp":timeStamp,         //时间戳,自1970年以来的秒数
+                    "nonceStr":nonceStr, //随机串
+                    "package":package,
+                    "signType":signType,         //微信签名方式：
+                    "paySign":paySign //微信签名
+                },
+                function(res){
+                    if(res.err_msg == "get_brand_wcpay_request:ok" ) {
+                        $(".zdxx").hide();
+                        console.log('支付成功');
+                        //支付成功后跳转的页面
+						$(".chenggong").show();
+                    }else if(res.err_msg == "get_brand_wcpay_request:cancel"){
+                        console.log('支付取消');
+                        $(".zdxx").hide();
+                        $(".quxiao").show();
+                    }else if(res.err_msg == "get_brand_wcpay_request:fail"){
+                        console.log('支付失败');
+                        $(".zdxx").hide();
+                        $(".shibai").show();
+                        WeixinJSBridge.call('closeWindow');
+                    } //使用以上方式判断前端返回,微信团队郑重提示：res.err_msg将在用户支付成功后返回ok,但并不保证它绝对可靠。
+                });
+        }
+	</script>
+</body>
+</html>

@@ -1,0 +1,39 @@
+
+package ${package}.model.entity.vo;
+
+#if(${hasBigDecimal})
+import java.math.BigDecimal;
+#end
+import com.gemframework.model.common.BaseEntityVo;
+import lombok.Data;
+
+/**
+ * @Title: ${className}Vo
+ * @Date: ${datetime}
+ * @Version: v1.0
+ * @Description: ${comments}VO对象
+ * @Author: ${author}
+ * @Email: ${email}
+ * @Copyright: Copyright (c) 2020 wanyong
+ * @Company: www.gemframework.com
+ */
+@Data
+public class ${className}Vo extends BaseEntityVo {
+
+	#foreach ($column in $columns)
+		#if (${column.attrNameLow} eq "id"
+		|| ${column.attrNameLow} eq "remark"
+		|| ${column.attrNameLow} eq "sortNumber"
+		|| ${column.attrNameLow} eq "createTime"
+		|| ${column.attrNameLow} eq "updateTime"
+		|| ${column.attrNameLow} eq "deleted"
+		)
+		#else
+			/**
+			 * $column.comments
+			 */
+			private $column.attrType $column.attrNameLow;
+		#end
+	#end
+
+}

@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="zh-cn" class="fullscreen-bg" xmlns:th="http://www.thymeleaf.org"
+	  xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<html>
+
+<head>
+<title>月报</title>
+<!-- for-mobile-apps -->
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+<!-- //for-mobile-apps -->
+<!-- font-awesome icons -->
+</head>
+
+<link th:href="@{/coral/css/jiesuan.css}" href="../../../../static/coral/css/jiesuan.css" rel="stylesheet"/>
+<script type="text/javascript" th:src="@{/assets/js/jquery-3.2.1.min.js}" src="../../../../static/assets/js/jquery-3.2.1.min.js"></script>
+<style>
+	table tr{
+		line-height: 30px;
+	}
+	.main{
+		padding: 0 20px;
+	}
+</style>
+<body>
+	<div class="main">
+		<!--<h1>合同到期续费支付</h1>-->
+
+		<div class="w3_agile_main_grids">
+			<table border="1" style="position: relative;">
+				<tr>
+					<th colspan="2"align="center" style="font-size: 20px;font-weight: bolder  ;">企业财务经营状况汇报表</th>
+				</tr>
+				<tr>
+					<th colspan="2" align="left" ><span name="gsmc" style="font-size: 18px;"></span></th>
+				</tr>
+				<tr id="cwzk">
+					<th colspan="2"align="left" style="font-size: 17px;font-weight: bold  ;">一、财务状况：</th>
+				</tr>
+				<tr>
+					<td>资产</td>
+					<td align="right"><span name="zc"></span>元</td>
+				</tr>
+				<tr>
+					<td>负债</td>
+					<td align="right"><span name="fz"></span>元</td>
+				</tr>
+				<tr>
+					<td>法人负债</td>
+					<td align="right"><span name="frfz"></span>元</td>
+				</tr>
+				<tr>
+					<td>其中：存货(商品)</td>
+					<td align="right"><span name="ch"></span>元</td>
+				</tr>
+				<tr id="jyzk">
+					<th colspan="2"align="left" style="font-size: 17px;font-weight: bold  ;">二、经营情况：</th>
+				</tr>
+				<tr>
+					<td>本月营业收入</td>
+					<td align="right"><span name="yysr"></span>元</td>
+				</tr>
+				<tr>
+					<td>本月营业成本及费用</td>
+					<td align="right"><span name="yycb"></span>元</td>
+				</tr>
+				<tr>
+					<td>本月利润</td>
+					<td align="right"><span name="yylr"></span>元</td>
+				</tr>
+				<tr>
+					<td>本季度累计收入</td>
+					<td align="right"><span name="jdsr"></span>元</td>
+				</tr>
+				<tr>
+					<td>本季度累计成本及费用</td>
+					<td align="right"><span name="jdcb"></span>元</td>
+
+				</tr>
+				<tr>
+					<td>本季度累计收利润</td>
+					<td align="right"><span name="jdlr"></span>元</td>
+				</tr>
+				<tr>
+					<td>本年度累计收入</td>
+					<td align="right"><span name="ndsr"></span>元</td>
+				</tr>
+				<tr>
+
+					<td>本年度累计成本及费用</td>
+					<td align="right"><span name="ndcb"></span>元</td>
+
+				</tr>
+				<tr>
+					<td>本年度累计收利润</td>
+					<td align="right"><span name="ndlr"></span>元</td>
+				</tr>
+				<tr id="jnsf">
+					<th colspan="2"align="left" style="font-size: 17px;font-weight: bold  ;">三、缴纳税费情况：</th>
+				</tr>
+				<tr>
+					<td>增值税</td>
+					<td align="right"><span name="zzs"></span>元</td>
+				</tr>
+				<tr>
+
+					<td>增值税附加税</td>
+					<td align="right"><span name="fjs"></span>元</td>
+
+				</tr>
+				<tr>
+					<td>企业所得税</td>
+					<td align="right"><span name="sds"></span>元</td>
+				</tr>
+				<tr>
+
+					<td>水利基金</td>
+					<td align="right"><span name="sljj"></span>元</td>
+				</tr>
+				<tr>
+
+					<td>工会经费</td>
+					<td align="right"><span name="ghjf"></span>元</td>
+				</tr>
+				<tr>
+					<td>期末留抵</td>
+					<td align="right"><span name="qmld"></span>元</td>
+				</tr>
+				<tr>
+					<td>文化事业建设费</td>
+					<td align="right"><span name="whsyjs"></span>元</td>
+				</tr>
+				<tr>
+					<td>印花税</td>
+					<td align="right"><span name="yhs"></span>元</td>
+				</tr>
+				<tr>
+					<td>个人所得税</td>
+					<td align="right"><span name="grsd"></span>元</td>
+				</tr>
+				<tr>
+					<td>社保</td>
+					<td align="right"><span name="shebao"></span>元</td>
+				</tr>
+				<tr>
+					<td>个人经营所得</td>
+					<td align="right"><span name="grjysd"></span>元</td>
+				</tr>
+				<tr>
+					<td>城镇土地使用税</td>
+					<td align="right"><span name="sys"></span>元</td>
+				</tr>
+				<tr>
+					<td>残保金</td>
+					<td align="right"><span name="cbj"></span>元</td>
+				</tr>
+				<tr>
+					<td>房产税</td>
+					<td align="right"><span name="fcs"></span>元</td>
+				</tr>
+				<tr>
+					<td>其他</td>
+					<td align="right"><span name="qt"></span>元</td>
+				</tr>
+
+
+				<tr id="tgzl">
+					<th colspan="2"align="left" style="font-size: 17px;font-weight: bold  ;">四、需要提供的资料：</th>
+				</tr>
+				<tr>
+					<td colspan="2"align="left">与收入相配比的成本及费用发票【<span name="fpf"></span>】元</td>
+				</tr>
+				<tr>
+					<td>会计人员：</td>
+					<td><span name="kjry"></span></td>
+
+				</tr>
+				<tr>
+					<td>审核人员：</td>
+					<td ><span name="shry"></span></td>
+				</tr>
+				<tr>
+					<td colspan="2">感谢贵公司对我们工作的信任与支持，祝生意兴隆、财源广进！</td>
+				</tr>
+				<tr>
+					<td colspan="2" align="right" style="position: relative;">宁夏金管家会计代理有限公司
+						<img style="width:100px;position: absolute;right: 5%;top: -50%;z-index: -1;" th:src="@{/coral/images/jgjyz.jpg}" src="../../../../static/coral/images/jgjyz.jpg" />
+					</td>
+				</tr>
+				<tr>
+					<td colspan="2" align="right">当前日期 ：<span name="riqi"></span></td>
+				</tr>
+			</table>
+		</div>
+
+	
+	</div>
+	<script>
+        var appId = null;
+        var timeStamp = null;
+        var nonceStr = null;
+        var package = null;
+        var signType = null;
+        var paySign = null;
+        $(function () {
+
+                $.get("jiesuan/getInfo",function(res){
+                        if(res.code=="0"){
+                            var obj = res.data;
+							$("[name='gsmc']").text(obj.customerName);
+							var cwzkFlag=false;
+                            if(obj.assets==null||obj.assets==""){
+                                $("[name='zc']").parents("tr").remove();
+                            }else {
+                                cwzkFlag=true;
+                                $("[name='zc']").text(obj.assets);
+                            }
+                            if(obj.liabilities==null||obj.liabilities==""){
+                                $("[name='fz']").parents("tr").remove();
+                            }else {
+                                cwzkFlag=true;
+                                $("[name='fz']").text(obj.liabilities);
+                            }
+                            if(obj.liabilities==null||obj.liabilities==""){
+                                $("[name='frfz']").parents("tr").remove();
+                            }else {
+                                cwzkFlag=true;
+                                $("[name='frfz']").text(obj.liabilities);
+                            }
+                            if(!cwzkFlag){
+                                $("#cwzk").remove();
+							}
+                            //商品存货
+                            if(obj.liabilities==null||obj.liabilities==""){
+                                $("[name='ch']").parents("tr").remove();
+                            }else {
+                                cwzkFlag=true;
+                                $("[name='ch']").text(obj.liabilities);
+                            }
+                            var jyzkFlag=false;
+                            if(obj.businessIncome==null||obj.businessIncome==""){
+                                $("[name='yysr']").parents("tr").remove();
+                            }else {
+                                jyzkFlag=true;
+                                $("[name='yysr']").text(obj.businessIncome);
+                            }
+                            if(obj.operatingCosts==null||obj.operatingCosts==""){
+                                $("[name='yycb']").parents("tr").remove();
+                            }else {
+                                jyzkFlag=true;
+                                $("[name='yycb']").text(obj.operatingCosts);
+                            }
+                            if(obj.monthProfit==null||obj.monthProfit==""){
+                                $("[name='yylr']").parents("tr").remove();
+                            }else {
+                                jyzkFlag=true;
+                                $("[name='yylr']").text(obj.monthProfit);
+                            }
+                            if(obj.quarterIncome==null||obj.quarterIncome==""){
+                                $("[name='jdsr']").parents("tr").remove();
+                            }else {
+                                jyzkFlag=true;
+                                $("[name='jdsr']").text(obj.quarterIncome);
+                            }
+                            if(obj.quarterCosts==null||obj.quarterCosts==""){
+                                $("[name='jdcb']").parents("tr").remove();
+                            }else {
+                                jyzkFlag=true;
+                                $("[name='jdcb']").text(obj.quarterCosts);
+                            }
+                            if(obj.quarterProfit==null||obj.quarterProfit==""){
+                                $("[name='jdlr']").parents("tr").remove();
+                            }else {
+                                jyzkFlag=true;
+                                $("[name='jdlr']").text(obj.quarterProfit);
+                            }
+                            if(obj.yearIncome==null||obj.yearIncome==""){
+                                $("[name='ndsr']").parents("tr").remove();
+                            }else {
+                                jyzkFlag=true;
+                                $("[name='ndsr']").text(obj.yearIncome);
+                            }
+                            if(obj.yearCosts==null||obj.yearCosts==""){
+                                $("[name='ndcb']").parents("tr").remove();
+                            }else {
+                                jyzkFlag=true;
+                                $("[name='ndcb']").text(obj.yearCosts);
+                            }
+                            if(obj.yearProfit==null||obj.yearProfit==""){
+                                $("[name='ndlr']").parents("tr").remove();
+                            }else {
+                                jyzkFlag=true;
+                                $("[name='ndlr']").text(obj.yearProfit);
+                            }
+                            if(!jyzkFlag){
+                                $("#jyzk").remove();
+							}
+
+                            var jnsfFlag=false;
+                            if(obj.incrementTax==null||obj.incrementTax==""){
+                                $("[name='zzs']").parents("tr").remove();
+							}else {
+                                jnsfFlag=true;
+                                $("[name='zzs']").text(obj.incrementTax);
+                            }
+                            if(obj.surtax==null||obj.surtax==""){
+                                $("[name='fjs']").parents("tr").remove();
+                            }else {
+                                jnsfFlag=true;
+                                $("[name='fjs']").text(obj.surtax);
+                            }
+                            if(obj.incomeTax==null||obj.incomeTax==""){
+                                $("[name='sds']").parents("tr").remove();
+                            }else {
+                                jnsfFlag=true;
+                                $("[name='sds']").text(obj.incomeTax);
+                            }
+                            if(obj.waterConservancyFund==null||obj.waterConservancyFund==""){
+                                $("[name='sljj']").parents("tr").remove();
+                            }else {
+                                jnsfFlag=true;
+                                $("[name='sljj']").text(obj.waterConservancyFund);
+                            }
+                            if(obj.laborUnionFunds==null||obj.laborUnionFunds==""){
+                                $("[name='ghjf']").parents("tr").remove();
+                            }else {
+                                jnsfFlag=true;
+                                $("[name='ghjf']").text(obj.laborUnionFunds);
+                            }
+                            if(obj.retentiveBase==null||obj.retentiveBase==""){
+                                $("[name='qmld']").parents("tr").remove();
+                            }else {
+                                jnsfFlag=true;
+                                $("[name='qmld']").text(obj.retentiveBase);
+                            }
+                            if(obj.wenhuajs==null||obj.wenhuajs==""){
+                                $("[name='whsyjs']").parents("tr").remove();
+                            }else {
+                                jnsfFlag=true;
+                                $("[name='whsyjs']").text(obj.wenhuajs);
+                            }
+                            if(obj.yinhuaTax==null||obj.yinhuaTax==""){
+                                $("[name='yhs']").parents("tr").remove();
+                            }else {
+                                jnsfFlag=true;
+                                $("[name='yhs']").text(obj.yinhuaTax);
+                            }
+                            if(obj.gerenSuode==null||obj.gerenSuode==""){
+                                $("[name='grsd']").parents("tr").remove();
+                            }else {
+                                jnsfFlag=true;
+                                $("[name='grsd']").text(obj.gerenSuode);
+                            }
+                            if(obj.shebao==null||obj.shebao==""){
+                                $("[name='shebao']").parents("tr").remove();
+                            }else {
+                                jnsfFlag=true;
+                                $("[name='shebao']").text(obj.shebao);
+                            }
+                            if(obj.jingyingSuode==null||obj.jingyingSuode==""){
+                                $("[name='grjysd']").parents("tr").remove();
+                            }else {
+                                jnsfFlag=true;
+                                $("[name='grjysd']").text(obj.jingyingSuode);
+                            }
+                            if(obj.landUseTax==null||obj.landUseTax==""){
+                                $("[name='sys']").parents("tr").remove();
+                            }else {
+                                jnsfFlag=true;
+                                $("[name='sys']").text(obj.landUseTax);
+                            }
+                            if(obj.canbaoJin==null||obj.canbaoJin==""){
+                                $("[name='cbj']").parents("tr").remove();
+                            }else {
+                                jnsfFlag=true;
+                                $("[name='cbj']").text(obj.canbaoJin);
+                            }
+                            if(obj.propertyTax==null||obj.propertyTax==""){
+                                $("[name='fcs']").parents("tr").remove();
+                            }else {
+                                jnsfFlag=true;
+                                $("[name='fcs']").text(obj.propertyTax);
+                            }
+                            if(obj.otherTax==null||obj.otherTax==""){
+                                $("[name='qt']").parents("tr").remove();
+                            }else {
+                                jnsfFlag=true;
+                                $("[name='qt']").text(obj.otherTax);
+                            }
+
+                            if(!jnsfFlag){
+                                $("#jnsf").remove();
+							}
+                            if(obj.invoice==null||obj.invoice==""){
+                                $("[name='fpf']").parents("tr").remove();
+                                $("#tgzl").remove();
+                            }else {
+                                $("[name='fpf']").text(obj.invoice);
+                            }
+                            $("[name='kjry']").text(obj.userName);
+                            $("[name='shry']").text(obj.shenheName);
+                            $("[name='riqi']").text(obj.createTimeStr);
+                        }else{
+                            alert("网络错误，请稍后重试！");
+                        }
+
+                    },
+                    "json");
+
+
+        });
+
+	</script>
+</body>
+</html>

@@ -1,0 +1,192 @@
+﻿
+<!DOCTYPE html>
+<html lang="zh-cn" class="fullscreen-bg" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="common/links :: common_header(~{::title},~{},~{})">
+    <title>代码生成器</title>
+</head>
+<body>
+<!-- 页面加载loading -->
+<div class="page-loading">
+    <div class="ball-loader">
+        <span></span><span></span><span></span><span></span>
+    </div>
+</div>
+<!-- 正文开始 -->
+<div class="layui-fluid">
+    <div class="layui-card">
+        <div class="layui-card-body">
+            <!-- 表格工具栏 -->
+            <div class="layui-form toolbar">
+                <div class="layui-form-item">
+                    <div class="layui-inline">
+                            <input tb-search="dataTable" class="layui-input icon-search" type="text"/>
+                    </div>
+                    <div class="layui-inline">&emsp;
+                        <button class="layui-btn icon-btn" id="settingBtn" type="button">
+                            <i class="layui-icon">&#xe716;</i>参数设置
+                        </button>
+                        <button class="layui-btn icon-btn" id="generateBtn" type="button">
+                            <i class="layui-icon">&#xe653;</i>一键生成模块代码
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <!-- 数据表格 -->
+            <table id="dataTable" lay-filter="dataTable"></table>
+        </div>
+    </div>
+</div>
+
+
+<!-- 表单弹窗 -->
+<script type="text/html" id="formDialog">
+    <form id="dataForm" lay-filter="dataForm" class="layui-form model-form">
+        <input name="id" type="hidden"/>
+        <div class="layui-form-item">
+            <label class="layui-form-label layui-form-required">表名前缀:</label>
+            <div class="layui-input-block">
+                <input name="tabalePrefix" placeholder="请输入数据库表名前缀" class="layui-input"
+                       lay-verType="tips" lay-verify="required" required/>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label layui-form-required">包名设置:</label>
+            <div class="layui-input-block">
+                <input name="packageName" placeholder="请设置代码包名" class="layui-input"
+                       lay-verType="tips" lay-verify="required" required/>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label layui-form-required">模块简称:</label>
+            <div class="layui-input-block">
+                <input name="moduleName" placeholder="请输入模块名称，尽量简写" class="layui-input"
+                       lay-verType="tips" lay-verify="required" required/>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label layui-form-required">作者名称:</label>
+            <div class="layui-input-block">
+                <input name="authorName" placeholder="请输入作者名称" class="layui-input"
+                       lay-verType="tips" lay-verify="required" required/>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label layui-form-required">作者邮箱:</label>
+            <div class="layui-input-block">
+                <input name="authorEmail" placeholder="请输入作者邮箱" class="layui-input"
+                       lay-verType="tips" lay-verify="required" required/>
+            </div>
+        </div>
+        <div class="layui-form-item text-right">
+            <button class="layui-btn" lay-filter="saveBtn" lay-submit>保存</button>
+            <button class="layui-btn layui-btn-primary" type="button" ew-event="closeDialog">取消</button>
+        </div>
+    </form>
+</script>
+
+<!-- js部分1 -->
+<div th:replace="common/scripts :: common"></div>
+<div th:replace="common/scripts :: custom"></div>
+<script>
+    layui.use(['layer', 'form', 'table', 'tableX','admin'], function () {
+        var $ = layui.jquery;
+        var layer = layui.layer;
+        var form = layui.form;
+        var table = layui.table;
+        var admin = layui.admin;
+        var tableX = layui.tableX;
+        /* 渲染表格 */
+        var cols = [
+            {type: 'checkbox', fixed: 'left'}
+            , {field: 'tableName', title: '表名', sort: true, edit: 'null'}
+            , {field: 'tableCollation', title: '编码', sort: false, edit: 'null'}
+            , {field: 'engine', title: '引擎', sort: false, edit: 'null'}
+            , {field: 'tableComment', title: '备注信息', sort: true, edit: 'null'}
+            , {
+                field: 'updateTime', title: '更新时间', sort: true, templet:'<div>{{layui.util.toDateString(d.updateTime, "yyyy年MM月dd日HH时mm分")}}</div>'
+            }
+        ];
+
+
+        // 前端分页
+        var insTb = tableX.renderFront({
+            elem: '#dataTable',
+            url: 'generator/list',
+            page: {groups: 6},
+            cellMinWidth: 100,
+            toolbar: true,
+            cols: [cols],
+            // where: {"tableName":"aaa"},
+            done: function () {
+            }
+        });
+
+        /* 表格头工具栏点击事件 */
+        table.on('toolbar(dataTable)', function (obj) {
+            if (obj.event === 'add') { // 添加
+                showEditModel();
+            } else if (obj.event === 'del') { // 删除
+                var checkRows = table.checkStatus('dataTable');
+                if (checkRows.data.length === 0) {
+                    layer.msg('请选择要删除的数据', {icon: 2});
+                    return;
+                }
+                var ids = checkRows.data.map(function (d) {
+                    return d.id;
+                });
+                doDel({ids: ids});
+            }
+        });
+
+
+        /* 参数设置 */
+        $('#settingBtn').click(function () {
+            var mData = null;
+            $.get('generator/info', function (res) {
+                if(res && res.code==0 && res.data){
+                    mData = res.data;
+                    // 显示编辑弹窗
+                    admin.open({
+                        type: 1,
+                        area: '800px',
+                        title: '设置代码生成参数',
+                        content: $('#formDialog').html(),
+                        success: function (layero, dIndex) {
+                            form.val('dataForm', mData);  // 回显数据
+                            // 添加权限信息
+                            form.on('submit(saveBtn)', function (data) {
+                                $.post('generator/config', data.field, function (res) {
+                                    if (res.code == 0) {
+                                        layer.close(dIndex);
+                                        layer.msg(res.msg, {icon: 1});
+                                        insTb.reload({page: {curr: 1}});
+                                    } else {
+                                        layer.msg(res.msg, {icon: 2});
+                                    }
+                                }, 'json');
+                                return false;
+                            });
+                        }
+                    });
+                }
+            });
+        });
+
+        /* 代码生成 */
+        $('#generateBtn').click(function () {
+            var checkStatus = table.checkStatus("dataTable");
+            if (checkStatus.data.length == 0) {
+                layer.msg("请至少选择一张数据库表！");
+                return ;
+            }
+            var tableName = [];
+            for (var i = 0; i < checkStatus.data.length; i++) {
+                tableName.push(checkStatus.data[i].tableName);
+            }
+            location.href = "generator/code?tables=" + tableName;
+        });
+
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,242 @@
+﻿<!DOCTYPE html>
+<html lang="zh-cn" class="fullscreen-bg" xmlns:th="http://www.thymeleaf.org"
+      xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<head th:replace="common/links :: common_header(~{::title},~{},~{})">
+    <title>示例模块</title>
+</head>
+<body>
+<!-- 页面加载loading -->
+<div class="page-loading">
+    <div class="ball-loader">
+        <span></span><span></span><span></span><span></span>
+    </div>
+</div>
+<!-- 正文开始 -->
+
+<div class="layui-fluid ew-console-wrapper">
+    <div class="layui-row layui-col-space15">
+        <div class="layui-col-xs12 layui-col-sm6 layui-col-md6">
+            <div class="layui-card" style="height: 500px;">
+                <div class="layui-card-header">基本信息</div>
+                <input type="hidden" name="id" />
+                <div class="layui-card-body">
+                    <div class="layui-form-item">
+                        <label class="layui-form-label" style="width:130px">公司名称：</label>
+                        <div class="layui-input-block">
+                            <label class="layui-form-label-col">
+                                <input name="gsmc" style="width: 200px;" class="layui-input"
+                                       lay-verType="tips" lay-verify="required" required/>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <label class="layui-form-label " style="width:130px">统一代码：</label>
+                        <div class="layui-input-block">
+                            <label class="layui-form-label-col">
+                                <input name="tydm" style="width: 200px;" class="layui-input"
+                                       lay-verType="tips" lay-verify="required" required/>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <label class="layui-form-label " style="width:130px">纳税性质：</label>
+                        <div class="layui-input-block">
+                            <label class="layui-form-label-col">
+                                <select name="nsxz" style="width: 200px;" class="layui-select"
+                                        lay-verType="tips" lay-verify="required" required>
+                                    <option value="">请选择纳税性质</option>
+                                    <option value="0">小规模</option>
+                                    <option value="1">一般纳税人</option>
+                                    <option value="2">个体</option>
+                                    <option value="3">个体一般纳税人</option>
+                                </select>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <label class="layui-form-label " style="width:130px">主营业务：</label>
+                        <div class="layui-input-block">
+                            <label class="layui-form-label-col">
+                                <input name="zyyw" style="width: 200px;" class="layui-input"
+                                       lay-verType="tips" lay-verify="required" required/>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <label class="layui-form-label " style="width:130px">实体经营地址：</label>
+                        <div class="layui-input-block">
+                            <label class="layui-form-label-col">
+                                <input name="jydz" class="layui-input"
+                                       lay-verType="tips" style="width: 200px;" lay-verify="required" required/>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <label class="layui-form-label " style="width:100px">客户来源：</label>
+                        <div class="layui-input-block">
+                            <label class="layui-form-label-col khly"></label>
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <button class="layui-btn" style="margin-left: 75%;" id="saveBtn" lay-submit>修改</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="layui-col-xs12 layui-col-sm6 layui-col-md6">
+            <div class="layui-card" style="height: 500px;">
+                <div class="layui-card-header">工商信息</div>
+                <div class="layui-card-body">
+                    <div class="layui-form-item">
+                        <label class="layui-form-label " style="width:130px">营业执照：</label>
+                        <div class="layui-input-block">
+                            <label class="layui-form-label-col yyzz"></label>
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <label class="layui-form-label " style="width:130px">法人身份证正反面：</label>
+                        <div class="layui-input-block">
+                            <label class="layui-form-label-col frsfz"></label>
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <label class="layui-form-label " style="width:130px">签约合同扫描件：</label>
+                        <div class="layui-input-block">
+                            <label class="layui-form-label-col qyht"></label>
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <label class="layui-form-label " style="width:130px">房产证：</label>
+                        <div class="layui-input-block">
+                            <label class="layui-form-label-col fcz"></label>
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <label class="layui-form-label " style="width:130px">租赁合同：</label>
+                        <div class="layui-input-block">
+                            <label class="layui-form-label-col zlht"></label>
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <label class="layui-form-label " style="width:130px">房东身份证复印件：</label>
+                        <div class="layui-input-block">
+                            <label class="layui-form-label-col fdsfz"></label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="layui-col-xs12 layui-col-sm6 layui-col-md12">
+            <div class="layui-card">
+                <div class="layui-card-header">服务项目</div>
+                <div class="layui-card-body">
+                    <table id="services" lay-filter="test">
+                    </table>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+
+<!-- js部分1 -->
+<div th:replace="common/scripts :: common"></div>
+<div th:replace="common/scripts :: custom"></div>
+<div th:replace="common/shiro :: demoShiroTag"></div>
+<script>
+    layui.use(['layer', 'form', 'table', 'util', 'laydate', 'tableX', 'admin'], function () {
+        var $ = layui.jquery;
+        var layer = layui.layer;
+        var form = layui.form;
+        var table = layui.table;
+        var util = layui.util;
+        var laydate = layui.laydate;
+        var tableX = layui.tableX;
+        var admin = layui.admin;
+
+
+        var customerId = "";
+        if (localStorage.getItem("customerId") != null) {
+            customerId = localStorage.getItem("customerId");
+        }
+        $("#saveBtn").click(function (res) {
+            layer.confirm('确认修改该客户信息吗？', {
+                    skin: 'layui-layer-admin',
+                    shade: .1
+                },function (obj) {
+                $.post('customerResearch/update', {
+                    "id": $("[name='id']").val(),
+                    "corporateName": $("[name='gsmc']").val(),
+                    "corporateId": $("[name='tydm']").val(),
+                    "payTaxProperties": $("[name='nsxz']").val(),
+                    "mainBusiness": $("[name='zyyw']").val(),
+                    "addresDetail": $("[name='jydz']").val()
+                }, function (res) {
+                    if (res.code == 0) {
+                        layer.close(dIndex);
+                        layer.msg(res.msg, {icon: 1});
+                        insTb.reload({page: {curr: 1}});
+                    } else {
+                        layer.msg(res.msg, {icon: 2});
+                    }
+                }, 'json');
+            })
+        })
+        
+        $.get("customerResearch/infoDetail", {"id": customerId}, function (res) {
+            console.log(res.data);
+            var info = res.data;
+            $('[name="gsmc"]').val(info.corporateName)
+            $("[name='tydm']").val(info.corporateId)
+            var nsxz = [
+                '<span class="layui-badge layui-badge-green">小规模</span>',
+                '<span class="layui-badge layui-badge-blue">一般纳税人</span>',
+                '<span class="layui-badge layui-badge-yellow">个体户</span>',
+                '<span class="layui-badge layui-badge-pink">个体户一般纳税人</span>'
+            ];
+            $("[name='nsxz']").val(info.payTaxProperties)
+            $("[name='zyyw']").val(info.mainBusiness)
+            $("[name='jydz']").val(info.addresDetail)
+            $(".khly").html(info.script)
+            $("[name='id']").val(info.id);
+
+            table.render({
+                elem: '#services'
+                ,url: 'customerResearch/getServiceDetail?id='+customerId //数据接口
+                ,cols: [ [ //表头
+                    ,{field: 'serviceName', title: '服务名称', }
+                    ,{field: 'price', title: '价格', sort: true}
+                    ,{field: 'remark', title: '备注', }
+                ] ]
+            });
+
+
+            var sfzfyz = "";
+            for (var i = 0; i < info.fjList.length; i++) {
+                var obj = info.fjList[i];
+                if (obj.imgType == "yyzz") {
+                    $(".yyzz").html("<a href='" + obj.imgUrl + "' target='_blank'>" + obj.imgName + "</a>");
+                } else if (obj.imgType == "qyht") {
+                    $(".qyht").html("<a href='" + obj.imgUrl + "' target='_blank'>" + obj.imgName + "</a>");
+                } else if (obj.imgType == "sfzzm") {
+                    sfzfyz += ("<a href='" + obj.imgUrl + "' target='_blank'>" + obj.imgName + "</a><br/>");
+                } else if (obj.imgType == "sfzfm") {
+                    sfzfyz += ("<a href='" + obj.imgUrl + "' target='_blank'>" + obj.imgName + "</a><br/>");
+                } else if (obj.imgType == "fcz") {
+                    $(".fcz").html("<a href='" + obj.imgUrl + "' target='_blank'>" + obj.imgName + "</a>");
+                } else if (obj.imgType == "zlht") {
+                    $(".zlht").html("<a href='" + obj.imgUrl + "' target='_blank'>" + obj.imgName + "</a>");
+                } else if (obj.imgType == "fdsfz") {
+                    $(".fdsfz").html("<a href='" + obj.imgUrl + "' target='_blank'>" + obj.imgName + "</a>");
+                }
+            }
+            $(".frsfz").html(sfzfyz);
+
+        });
+
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.gemframework.mapper.ServiceCommissionMapper">
+
+    <select id="getCommissioniInfo" resultType="java.util.Map" >
+        select * from rise_business_charges bc
+        LEFT JOIN rise_associated_services  ras on bc.id=ras.contract_id
+        where bc.deleted=0 and ras.deleted=0
+            <if test="userId!=null and userId!=''">
+              and bc.user_id=#{userId}
+            </if>
+            <if test="clerksId!=null and clerksId!=''">
+                and bc.clerks_id=#{clerksId}
+            </if>
+            <if test="serviceId!=null and serviceId!=''">
+                and ras.service_id=#{serviceId}
+            </if>
+    </select>
+</mapper>
+
+
+
+

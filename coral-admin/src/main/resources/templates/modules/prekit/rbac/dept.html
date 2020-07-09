@@ -1,0 +1,606 @@
+﻿
+<!DOCTYPE html>
+<html lang="zh-cn" class="fullscreen-bg" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<head th:replace="common/links :: common_header(~{::title},~{},~{::style})">
+    <title>机构管理</title>
+    <style>
+        /* 左树 */
+        #organizationTreeBar {
+            padding: 10px 15px;
+            border: 1px solid #e6e6e6;
+            background-color: #f2f2f2;
+        }
+
+        #organizationTree {
+            border: 1px solid #e6e6e6;
+            border-top: none;
+            padding: 10px 5px;
+            overflow: auto;
+            height: -webkit-calc(100vh - 125px);
+            height: -moz-calc(100vh - 125px);
+            height: calc(100vh - 125px);
+        }
+
+        .layui-tree-entry .layui-tree-txt {
+            padding: 0 5px;
+            border: 1px transparent solid;
+            text-decoration: none !important;
+        }
+
+        .layui-tree-entry.ew-tree-click .layui-tree-txt {
+            background-color: #fff3e0;
+            border: 1px #FFE6B0 solid;
+        }
+
+        /* 右表搜索表单 */
+        #searchForm .layui-form-label {
+            box-sizing: border-box !important;
+            width: 90px !important;
+        }
+
+        #searchForm .layui-input-block {
+            margin-left: 90px !important;
+        }
+    </style>
+</head>
+<body>
+<!-- 正文开始 -->
+<div class="layui-fluid">
+    <div class="layui-row layui-col-space15">
+        <div class="layui-col-md3">
+            <div class="layui-card">
+                <div class="layui-card-body" style="padding: 10px;">
+                    <!-- 树工具栏 -->
+                    <div class="layui-form toolbar" id="organizationTreeBar">
+                        <button shiro:hasPermission="dept:save" id="addBtn" class="layui-btn layui-btn-sm icon-btn">
+                            <i class="layui-icon">&#xe654;</i>添加
+                        </button>&nbsp;
+                        <button shiro:hasPermission="dept:update" id="editBtn" class="layui-btn layui-btn-sm layui-btn-warm icon-btn">
+                            <i class="layui-icon">&#xe642;</i>修改
+                        </button>&nbsp;
+                        <button shiro:hasPermission="dept:delete" id="delBtn" class="layui-btn layui-btn-sm layui-btn-danger icon-btn">
+                            <i class="layui-icon">&#xe640;</i>删除
+                        </button>
+                    </div>
+                    <!-- 左侧部门组织树 -->
+                    <div id="organizationTree"></div>
+                </div>
+            </div>
+        </div>
+        <div class="layui-col-md9">
+            <div class="layui-card">
+                <div class="layui-card-body" style="padding: 10px;">
+                    <!-- 右侧用户数据表格 -->
+                    <table id="userDataTable" lay-filter="userDataTable"></table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- 机构表单弹窗 -->
+<script type="text/html" id="editDialog">
+    <form id="dataForm" lay-filter="dataForm" class="layui-form model-form"
+          style="padding-right: 20px;">
+        <input name="id" type="hidden"/>
+        <div class="layui-row">
+            <div class="layui-col-md6">
+                <div class="layui-form-item">
+                    <label class="layui-form-label layui-form-required">上级机构:</label>
+                    <div class="layui-input-block">
+                        <div id="organizationEditParentSel" class="ew-xmselect-tree"></div>
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label layui-form-required">机构名称:</label>
+                    <div class="layui-input-block">
+                        <input name="name" placeholder="请输入机构名称" class="layui-input"
+                               lay-verType="tips" lay-verify="required" required/>
+                    </div>
+                </div>
+            <!--    <div class="layui-form-item">
+                    <label class="layui-form-label layui-form-required">机构全称:</label>
+                    <div class="layui-input-block">
+                        <input name="fullname" placeholder="请输入机构全称" class="layui-input"
+                               lay-verType="tips" lay-verify="required" required/>
+                    </div>
+                </div>-->
+                <div class="layui-form-item">
+                    <label class="layui-form-label layui-form-required">机构类型:</label>
+                    <div class="layui-input-block">
+                        <select name="type" lay-verType="tips" lay-verify="required" required>
+                            <option value="">请选择机构类型</option>
+                            <option value="1">公司</option>
+                            <option value="2">子公司</option>
+                            <option value="3">部门</option>
+                            <option value="4">小组</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="layui-col-md6">
+                <div class="layui-form-item">
+                    <label class="layui-form-label layui-form-required">排序序号:</label>
+                    <div class="layui-input-block">
+                        <input name="sortNumber" placeholder="请输入排序号" class="layui-input" type="number"
+                               lay-verType="tips" lay-verify="required" required value="99"/>
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label">备注信息:</label>
+                    <div class="layui-input-block">
+                        <textarea name="remark" placeholder="请输入备注" class="layui-textarea"></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item text-right">
+            <button class="layui-btn" lay-filter="saveBtn" lay-submit>保存</button>
+            <button class="layui-btn layui-btn-primary" type="button" ew-event="closeDialog">取消</button>
+        </div>
+    </form>
+</script>
+
+<!-- 用户表格操作列 -->
+<script type="text/html" id="userTableBar">
+    <a shiro:hasPermission="user:update" class="layui-btn layui-btn-primary layui-btn-xs" lay-event="edit">修改</a>
+    <a shiro:hasPermission="user:delete" class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+</script>
+
+<!-- 用户表格工具列 -->
+<script type="text/html" id="userToolBar">
+    <button shiro:hasPermission="user:save" lay-event="add" class="layui-btn layui-btn-sm icon-btn">
+        <i class="layui-icon">&#xe654;</i>添加
+    </button>
+    <button shiro:hasPermission="user:delete" lay-event="del" class="layui-btn layui-btn-sm layui-btn-danger icon-btn">
+        <i class="layui-icon">&#xe640;</i>删除
+    </button>
+    <div class="dropdown-menu">
+        <button class="layui-btn layui-btn-sm layui-btn-warm icon-btn">
+            <i class="layui-icon">&#xe615;</i>搜索
+        </button>
+        <div class="dropdown-menu-nav dropdown-bottom-right"
+             style="width: 300px;padding: 15px 15px 0 0;">
+            <div class="dropdown-anchor"></div>
+            <div class="layui-form" id="searchForm">
+                <div class="layui-form-item">
+                    <label class="layui-form-label">账&emsp;号:</label>
+                    <div class="layui-input-block">
+                        <input name="username" class="layui-input" placeholder="输入账号" />
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label">用户名:</label>
+                    <div class="layui-input-block">
+                        <input name="realname" class="layui-input" placeholder="输入用户名"/>
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label">性&emsp;别:</label>
+                    <div class="layui-input-block">
+                        <select name="sex">
+                            <option value="">选择性别</option>
+                            <option value="0">男</option>
+                            <option value="1">女</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="layui-form-item text-right">
+                    <button class="layui-btn icon-btn" lay-filter="userSearchBtn" lay-submit>
+                        <i class="layui-icon">&#xe615;</i>搜索
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</script>
+<!-- 用户表单弹窗 -->
+<script type="text/html" id="userEditDialog">
+    <form id="userEditForm" lay-filter="userEditForm" class="layui-form model-form">
+        <input name="id" type="hidden"/>
+        <div class="layui-form-item">
+            <label class="layui-form-label layui-form-required">直属机构:</label>
+            <div class="layui-input-block">
+                <div id="userDept" class="ew-xmselect-tree"></div>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label layui-form-required">用&nbsp;&nbsp;户&nbsp;&nbsp;名:</label>
+            <div class="layui-input-block">
+                <input name="username" placeholder="请输入账号" class="layui-input"
+                       lay-verType="tips" maxlength="15" lay-verify="required" required/>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label layui-form-required">设置密码:</label>
+            <div class="layui-input-block">
+                <input name="password" placeholder="默认123456" class="layui-input" type="password"
+                       lay-verType="tips" maxlength="32" value="123456"/>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label layui-form-required">真实姓名:</label>
+            <div class="layui-input-block">
+                <input name="realname" placeholder="请输入真实姓名" class="layui-input"
+                       lay-verType="tips" maxlength="10" lay-verify="required" required/>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label layui-form-required">选择性别:</label>
+            <div class="layui-input-block">
+                <input type="radio" name="sex" value="0" title="男" checked/>
+                <input type="radio" name="sex" value="1" title="女"/>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label layui-form-required">手机号码:</label>
+            <div class="layui-input-block">
+                <input name="phone" placeholder="请输入手机号" class="layui-input"
+                       lay-verType="tips" lay-verify="phone" required/>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label layui-form-required">电子邮箱:</label>
+            <div class="layui-input-block">
+                <input name="email" placeholder="请输入电子邮箱" class="layui-input"
+                       lay-verType="tips" lay-verify="email" required/>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label layui-form-required">角色授权:</label>
+            <div class="layui-input-block">
+                <div id="userEditRoleSel"></div>
+            </div>
+        </div>
+        <div class="layui-form-item text-right">
+            <button class="layui-btn" lay-filter="userEditSubmit" lay-submit>保存</button>
+            <button class="layui-btn layui-btn-primary" type="button" ew-event="closeDialog">取消</button>
+        </div>
+    </form>
+</script>
+<!-- js部分 -->
+<div th:replace="common/scripts :: common"></div>
+<script th:inline="javascript">
+    layui.use(['layer', 'form', 'table','tableX','util', 'admin', 'tree', 'dropdown', 'xmSelect', 'treeTable'], function () {
+        var $ = layui.jquery;
+        var layer = layui.layer;
+        var form = layui.form;
+        var table = layui.table;
+        var tableX = layui.tableX;
+        var util = layui.util;
+        var admin = layui.admin;
+        var tree = layui.tree;
+        var xmSelect = layui.xmSelect;
+        var selObj, treeData;  // 左树选中数据
+
+        /* 渲染树形 */
+        function renderTree() {
+            $.get('dept/list', function (res) {
+                for (var i = 0; i < res.data.length; i++) {
+                    res.data[i].title = res.data[i].name;
+                    res.data[i].id = res.data[i].id;
+                    res.data[i].spread = true;
+                }
+                treeData = layui.treeTable.pidToChildren(res.data, 'id', 'pid');
+                tree.render({
+                    elem: '#organizationTree',
+                    onlyIconControl: true,
+                    data: treeData,
+                    click: function (obj) {
+                        selObj = obj;
+                        $('#organizationTree').find('.ew-tree-click').removeClass('ew-tree-click');
+                        $(obj.elem).children('.layui-tree-entry').addClass('ew-tree-click');
+                        insTb.reload({
+                            where: {deptId: obj.data.id},
+                            page: {curr: 1},
+                            url: 'user/page'
+                        });
+                    }
+                });
+                $('#organizationTree').find('.layui-tree-entry:first>.layui-tree-main>.layui-tree-txt').trigger('click');
+            });
+        }
+
+        renderTree();
+
+        /* 添加 */
+        $('#addBtn').click(function () {
+            showEditModel(null, selObj ? selObj.data.id : null);
+        });
+
+        /* 修改 */
+        $('#editBtn').click(function () {
+            if (!selObj) return layer.msg('未选择机构', {icon: 2});
+            if (selObj.data.id === 0) return layer.msg('系统预设数据，禁止修改', {icon: 4});
+            showEditModel(selObj.data);
+        });
+
+        /* 删除 */
+        $('#delBtn').click(function () {
+            if (!selObj) return layer.msg('未选择机构', {icon: 2});
+            if (selObj.data.id === 0) return layer.msg('系统预设数据，禁止删除', {icon: 4});
+            doDel(selObj.data);
+        });
+
+        /* 显示表单弹窗 */
+        function showEditModel(mData, pid) {
+            admin.open({
+                type: 1,
+                area: '800px',
+                title: (mData ? '修改' : '添加') + '机构',
+                content: $('#editDialog').html(),
+                success: function (layero, dIndex) {
+                    // 回显表单数据
+                    form.val('dataForm', mData);
+                    // 表单提交事件
+                    form.on('submit(saveBtn)', function (data) {
+                        data.field.fullname=data.field.name
+                        data.field.pid = insXmSel.getValue('valueStr');
+                        var loadIndex = layer.load(2);
+                        $.post(mData?'dept/update':'dept/save', data.field, function (res) {
+                            layer.close(loadIndex);
+                            if (0 === res.code) {
+                                layer.close(dIndex);
+                                layer.msg(res.msg, {icon: 1});
+                                renderTree();
+                            } else {
+                                layer.msg(res.msg, {icon: 2});
+                            }
+                        }, 'json');
+                        return false;
+                    });
+                    // 渲染下拉树
+                    var insXmSel = xmSelect.render({
+                        el: '#organizationEditParentSel',
+                        height: '250px',
+                        data: treeData,
+                        initValue: mData ? (mData.pid? [mData.pid] : [0]) : (pid ? [pid] : [0]),
+                        model: {label: {type: 'text'}},
+                        prop: {
+                            name: 'name',
+                            value: 'id'
+                        },
+                        radio: true,
+                        clickClose: true,
+                        tree: {
+                            show: true,
+                            indent: 15,
+                            strict: false,
+                            expandedKeys: true
+                        }
+                    });
+                    // 禁止弹窗出现滚动条
+                    $(layero).children('.layui-layer-content').css('overflow', 'visible');
+                }
+            });
+        }
+
+        /* 删除 */
+        window.doDel = function(obj){
+            layer.confirm('确定要删除此机构吗？', {
+                skin: 'layui-layer-admin',
+                shade: .1
+            }, function (i) {
+                layer.close(i);
+                var loadIndex = layer.load(2);
+                $.post('dept/delete', {
+                    id: obj.id,
+                }, function (res) {
+                    layer.close(loadIndex);
+                    if (0 === res.code) {
+                        layer.msg(res.msg, {icon: 1});
+                        renderTree();
+                    } else {
+                        layer.msg(res.msg, {icon: 2});
+                    }
+                }, 'json');
+            });
+        }
+
+        /* 渲染用户表格 */
+        var cols = [
+            {type: 'checkbox'},
+            {type: 'numbers'},
+            {field: 'username', title: '账号', sort: true},
+            {field: 'realname', title: '用户名', sort: true},
+            {field: 'phone', title: '手机号', sort: true},
+            {
+                field: 'createTime', title: '创建时间', templet: function (d) {
+                    return util.toDateString(d.createTime);
+                }, sort: true
+            },
+            {title: '操作', toolbar: '#userTableBar', align: 'center', width: 120, minWidth: 120}
+        ]
+        var insTb = table.render({
+            elem: '#userDataTable',
+            data: [],
+            height: 'full-52',
+            page: true,
+            toolbar: '#userToolBar',
+            cellMinWidth: 100,
+            cols: [cols],
+            done: function () {
+                // 表格搜索
+                form.on('submit(userSearchBtn)', function (data) {
+                    insTb.reload({where: data.field, page: {curr: 1}});
+                    return false;
+                });
+
+                // 绑定鼠标右键
+                tableX.bindCtxMenu('userDataTable', [{
+                    icon: 'layui-icon layui-icon-edit',
+                    name: '修改用户',
+                    click: function (d) {
+                        showEditModel2(d);
+                    }
+                }, {
+                    icon: 'layui-icon layui-icon-close text-danger',
+                    name: '<span class="text-danger">删除用户</span>',
+                    click: function (d) {
+                        doDel2(d);
+                    }
+                }]);
+            }
+        });
+
+        /* 表格工具条点击事件 */
+        table.on('tool(userDataTable)', function (obj) {
+            if (obj.event === 'edit') { // 修改
+                showEditModel2(obj.data);
+            } else if (obj.event === 'del') { // 删除
+                doDel2(obj.data);
+            }
+        });
+
+        /* 表格头工具栏点击事件 */
+        table.on('toolbar(userDataTable)', function (obj) {
+            if (obj.event === 'add') { // 添加
+                showEditModel2();
+            } else if (obj.event === 'del') { // 删除
+                var checkRows = table.checkStatus('userDataTable');
+                if (checkRows.data.length === 0) {
+                    layer.msg('请选择要删除的数据', {icon: 2});
+                    return;
+                }
+                var ids = checkRows.data.map(function (d) {
+                    return d.id;
+                });
+                doDel2({ids: ids});
+            }
+        });
+
+        /* 显示表单弹窗2 */
+        function showEditModel2(mData) {
+            admin.open({
+                type: 1,
+                area: '800px',
+                title: (mData ? '修改' : '添加') + '用户',
+                content: $('#userEditDialog').html(),
+                success: function (layero, dIndex) {
+                    // 回显表单数据
+                    form.val('userEditForm', mData);
+                    // 表单提交事件
+                    form.on('submit(userEditSubmit)', function (data) {
+                        data.field.roleIds = insRoleSel.getValue('valueStr');
+                        data.field.deptId = insDeptXmSel.getValue('valueStr');
+                        var loadIndex = layer.load(2);
+                        $.post(mData?'user/update':'user/save', data.field, function (res) {
+                            layer.close(loadIndex);
+                            if (res.code === 0) {
+                                layer.close(dIndex);
+                                layer.msg(res.msg, {icon: 1});
+                                insTb.reload({page: {curr: 1}});
+                            } else {
+                                layer.msg(res.msg, {icon: 2});
+                            }
+                        }, 'json');
+                        return false;
+                    });
+
+                    var leftDeptSelVal = selObj ? selObj.data.id : 1;
+                    var initVal = mData ? mData.deptId: leftDeptSelVal;
+                    // 渲染下拉树
+                    var insDeptXmSel = layui.xmSelect.render({
+                        el: '#userDept',
+                        height: '250px',
+                        data: treeData,
+                        initValue: [initVal],
+                        model: {label: {type: 'text'}},
+                        prop: {
+                            name: 'name',
+                            value: 'id'
+                        },
+                        radio: true,
+                        clickClose: true,
+                        tree: {
+                            show: true,
+                            indent: 15,
+                            strict: false,
+                            expandedKeys: true
+                        }
+                    });
+
+                    //查询角色list
+                    var insRoleSel;
+                    $.get('role/list', {}, function (res) {
+                        if (res.code === 0) {
+                            // 渲染多选下拉框
+                            insRoleSel = xmSelect.render({
+                                el: '#userEditRoleSel',
+                                name: 'userEditRoleSel',
+                                tips:'请授权角色',
+                                layVerify: 'required',
+                                layVerType: 'tips',
+                                direction: 'auto',
+                                filterable: true,
+                                paging: true,
+                                pageSize: 5,
+                                model: {
+                                    label: {
+                                        type: 'block',
+                                        block: {
+                                            //最大显示数量, 0:不限制
+                                            showCount: 5,
+                                            //是否显示删除图标
+                                            showIcon: true,
+                                        }
+                                    }
+                                },
+                                toolbar: {
+                                    show: true,
+                                },
+                                prop: {
+                                    name: 'name',
+                                    value: 'id',
+                                },
+                                data: res.data,
+                            });
+                            insRoleSel.set
+                        } else {
+                            layer.msg(res.msg, {icon: 2});
+                        }
+                        // 回显选中角色
+                        if (mData && mData.roles) {
+                            insRoleSel.setValue(mData.roles.map(function (item) {
+                                return item.id;
+                            }));
+                        }
+                    }, 'json');
+
+                    // 禁止弹窗出现滚动条
+                    $(layero).children('.layui-layer-content').css('overflow', 'visible');
+                }
+            });
+        }
+
+        /* 删除2 */
+        window.doDel2 = function(obj){
+            //管理员不让删除
+            if(obj.id === 1 || (obj.ids && obj.ids.indexOf(1) > -1)){
+                return layer.msg('包含系统预设数据，禁止删除', {icon: 4});
+            }
+            layer.confirm('确定要删除选中用户吗？', {
+                skin: 'layui-layer-admin',
+                shade: .1
+            }, function (i) {
+                layer.close(i);
+                var loadIndex = layer.load(2);
+                $.post('user/delete', {
+                    id: obj.data ? obj.data.id : '',
+                    ids: obj.ids ? obj.ids.join(',') : ''
+                }, function (res) {
+                    layer.close(loadIndex);
+                    if (0 === res.code) {
+                        layer.msg(res.msg, {icon: 1});
+                        insTb.reload({page: {curr: 1}});
+                    } else {
+                        layer.msg(res.msg, {icon: 2});
+                    }
+                }, 'json');
+            });
+        }
+
+    });
+</script>
+
+</body>
+</html>

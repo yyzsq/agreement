@@ -1,0 +1,40 @@
+
+<!DOCTYPE html>
+<html lang="zh-cn" class="fullscreen-bg" xmlns:th="http://www.thymeleaf.org">
+    <!-- 侧边栏 -->
+    <div th:fragment="left_sidebar" class="layui-side">
+        <div class="layui-side-scroll">
+            <ul id="sidebar-menu" class="layui-nav layui-nav-tree arrow2" nav-id="xt1" lay-filter="admin-side-nav"
+                lay-shrink="all" style="margin: 15px 0;">
+            </ul>
+            <!-- 系统二的菜单，加layui-hide隐藏 -->
+            <ul class="layui-nav layui-nav-tree layui-hide" nav-id="xt2" lay-filter="admin-side-nav"
+                style="margin: 15px 0;">
+                <li class="layui-nav-item">
+                    <a><i class="layui-icon layui-icon-table"></i>&emsp;<cite>表格页</cite></a>
+                    <dl class="layui-nav-child">
+                        <dd><a lay-href="../../page/template/table/table-basic.html">数据表格</a></dd>
+                        <dd><a lay-href="../../page/template/table/table-advance.html">复杂查询</a></dd>
+                    </dl>
+                </li>
+            </ul>
+
+            <!-- 系统三的菜单，加layui-hide隐藏 -->
+            <ul class="layui-nav layui-nav-tree layui-hide" nav-id="xt3" lay-filter="admin-side-nav"
+                style="margin: 15px 0;">
+                <li class="layui-nav-item">
+                    <a><i class="layui-icon layui-icon-form"></i>&emsp;<cite>表单页</cite></a>
+                    <dl class="layui-nav-child">
+                        <dd><a lay-href="../../page/template/form/form-basic.html">基础表单</a></dd>
+                        <dd><a lay-href="../../page/template/form/form-advance.html">复杂表单</a></dd>
+                    </dl>
+                </li>
+            </ul>
+
+            <!-- 系统四的菜单，加layui-hide隐藏 -->
+            <ul id="sidebar-menu-achart" class="layui-nav layui-nav-tree layui-hide" nav-id="xt4" lay-filter="admin-side-nav"
+                lay-shrink="all" style="margin: 15px 0;">
+            </ul>
+        </div>
+    </div>
+</html>

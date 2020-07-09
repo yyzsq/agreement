@@ -1,0 +1,135 @@
+﻿<!DOCTYPE html>
+<html lang="zh-cn" class="fullscreen-bg" xmlns:th="http://www.thymeleaf.org"
+      xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<head th:replace="common/links :: common_header(~{::title},~{},~{})">
+    <title>申请表</title>
+
+</head>
+<style>
+    table{
+        width:85%;
+        margin: 0 auto;
+        font-size: 20px;
+    }
+    table td{
+        padding: 8px;
+
+    }
+</style>
+<!--<script type="text/javascript" th:src="@{/assets/js/jquery-3.2.1.min.js}"></script>-->
+<body>
+<!-- 正文开始 -->
+
+<div class="layui-fluid">
+    <div class="layui-card">
+        <div class="layui-card-body">
+            <!--startprint-->
+            <h2 style="text-align: center;">兰白人才服务大厅场地使用申请表</h2>
+            <table border="1">
+                <tr>
+                    <th>使用时间</th>
+                    <td style="text-align: center;"> <span name="shiyongTime">2020-06-02 08:00:00</span></td>
+                    <th>申请时间</th>
+                    <td style="text-align: center;"><span name="shenqingTime">2020-06-02 08:00:00</span></td>
+                </tr>
+                <tr>
+                    <th>使用单位</th>
+                    <td style="text-align: center;" colspan="3"><span name="sydw">兰州理工大学使用</span></td>
+                </tr>
+                <tr>
+                    <th>使用场所</th>
+                    <td style="text-align: center;" colspan="3"><span name="sycs">会议室</span></td>
+                </tr>
+                <tr>
+                    <th>活动内容</th>
+                    <td style="text-align: center;" colspan="3"><span name="hdnr">招聘会</span></td>
+                </tr>
+                <tr>
+                    <th>使用负责人</th>
+                    <td style="text-align: center;"><span name="fzr">李思</span></td>
+                    <th>电话</th>
+                    <td style="text-align: center;"><span name="phone">15050012345</span></td>
+                </tr>
+                <tr>
+                    <td colspan="4">
+                        <span style="text-align: left;">
+                        申请人单位负责人意见:
+                        </span>
+                        <span style="display: inline-block;width: 100%;height: 300px">
+
+                        </span>
+                        <p style="text-align: right;">
+                            签字（盖章）：<span style="width: 150px;display: inline-block;"></span>
+                        </p>
+
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="4" style="font-size: 20px;text-align: left;">
+                        1、大厅及面试间使用优先满足学校的重要活动安排。各部门使用时，如时间上发生冲突，按照联系时间先后安排。<br/>
+                        2、请在线上申请通过后两日内递交纸质版申请手续，口头或委托他人借用不予受理。<br/>
+                        3、使用单位签字盖章、大厅管理员确认后，申请手续才算办理完毕。<br/>
+                        4、本表一张只能申请使用一次。如申请后，需要变更需及时联系管理员。<br/>
+                        5、多媒体设备由大厅管理人员操作使用，不得私自使用。<br/>
+                        6、保持环境卫生，爱护公共财物，如有损坏，使用单位的负责人需承担责任。<br/>
+                        7、大厅及面试间开放时间为每天8:00--22:00。<br/>
+
+                    </td>
+                </tr>
+            </table>
+            <!--endprint-->
+            <button type="button" style="position: absolute;top:100px;" class="layui-btn layui-btn-radius layui-btn-normal" onclick="doPrint()"  >打印</button>
+            <!-- 数据表格 -->
+        </div>
+    </div>
+</div>
+<script language="javascript" type="text/javascript">
+    function doPrint() {
+        bdhtml=window.document.body.innerHTML; //获取当前页的html代码
+        sprnstr="<!--startprint-->"; //设置打印开始区域
+        eprnstr="<!--endprint-->";//设置打印结束区域
+        prnhtml=bdhtml.substr(bdhtml.indexOf(sprnstr)+17);//从开始代码向后取html
+        prnhtml=prnhtml.substring(0,prnhtml.indexOf(eprnstr));//从结束代码向前取html
+        window.document.body.innerHTML=prnhtml;
+        window.print();
+    }
+</script>
+
+<!-- js部分 -->
+<div th:replace="common/scripts :: common"></div>
+<div th:replace="common/scripts :: custom"></div>
+<div>
+</div>
+<script>
+    layui.use(['layer', 'form', 'table', 'util', 'laydate', 'tableX', 'admin'], function () {
+        var $ = layui.jquery;
+        var layer = layui.layer;
+        var form = layui.form;
+        var table = layui.table;
+        var util = layui.util;
+        var laydate = layui.laydate;
+        var tableX = layui.tableX;
+        var admin = layui.admin;
+        var id=localStorage.getItem("id");
+
+            $.get("",{},function (res) {
+                var info=res.date;
+                $("[name='shiyongTime']").text();//使用时间
+                $("[name='shenqingTime']").text();//申请时间
+                $("[name='sydw']").text();//使用单位
+                $("[name='sycs']").text();//使用场所
+                $("[name='hdnr']").text();//活动内容
+                $("[name='fzr']").text();//负责人
+                $("[name='phone']").text();//电话
+            })
+
+
+
+
+
+
+    });
+
+</script>
+</body>
+</html>

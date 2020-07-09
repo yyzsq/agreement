@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <artifactId>coral</artifactId>
+        <groupId>com.gemframework</groupId>
+        <version>0.0.1-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>coral-common-service</artifactId>
+    <version>${parent.version}</version>
+    <description>公共service层</description>
+    <packaging>jar</packaging>
+
+
+    <dependencies>
+        <!--coral模块-->
+        <dependency>
+            <groupId>com.gemframework</groupId>
+            <artifactId>coral-common-mapper</artifactId>
+            <version>${parent.version}</version>
+        </dependency>
+    </dependencies>
+
+</project>

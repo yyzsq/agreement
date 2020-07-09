@@ -1,0 +1,621 @@
+﻿
+<!DOCTYPE html>
+<html lang="zh-cn" class="fullscreen-bg" xmlns:th="http://www.thymeleaf.org"
+      xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<head th:replace="common/links :: common_header(~{::title},~{},~{})">
+    <title>字典表-模块</title>
+</head>
+<body>
+<!-- 页面加载loading -->
+<div class="page-loading">
+    <div class="ball-loader">
+        <span></span><span></span><span></span><span></span>
+    </div>
+</div>
+<!-- 正文开始 -->
+<div class="layui-fluid">
+    <div class="layui-card">
+        <div class="layui-card-body">
+            <!-- 表格工具栏 -->
+            <form class="layui-form toolbar">
+                <div class="layui-form-item">
+                    <div class="layui-inline">
+                        <label class="layui-form-label">字典名称:</label>
+                        <div class="layui-input-inline">
+                            <input name="name" class="layui-input" placeholder="请输入名称"/>
+                        </div>
+                    </div>
+                    <div class="layui-inline">
+                        <label class="layui-form-label">字典键:</label>
+                        <div class="layui-input-inline">
+                            <input name="keyName" class="layui-input" placeholder="请输入键"/>
+                        </div>
+                    </div>
+                    <div class="layui-inline">
+                        <label class="layui-form-label">字典值:</label>
+                        <div class="layui-input-inline">
+                            <input name="valueStr" class="layui-input" placeholder="请输入值"/>
+                        </div>
+                    </div>
+                    <div class="layui-inline">
+                        <label class="layui-form-label">字典类型:</label>
+                        <div class="layui-input-inline">
+                            <select name="type">
+                                <option value="">请选择</option>
+                                <option value="1">普通配置（k-v）</option>
+                                <option value="2">选项配置（k-map）</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="layui-inline">
+                        <label class="layui-form-label">更新时间:</label>
+                        <div class="layui-input-inline">
+                            <input name="dateRange" class="layui-input icon-date" placeholder="选择日期范围"
+                                   autocomplete="off"/>
+                        </div>
+                    </div>
+                    <div class="layui-inline">&emsp;
+                        <button class="layui-btn icon-btn" lay-filter="searchBtn" lay-submit>
+                            <i class="layui-icon">&#xe615;</i>搜索
+                        </button>&nbsp;
+                        <button shiro:hasPermission="demo:export" id="exportBtn" class="layui-btn icon-btn"
+                                type="button">
+                            <i class="layui-icon">&#xe67d;</i>导出
+                        </button>
+                    </div>
+                </div>
+            </form>
+            <!-- 数据表格 -->
+            <table id="dataTable" lay-filter="dataTable"></table>
+        </div>
+    </div>
+</div>
+
+<!-- 表格状态列 -->
+<script type="text/html" id="type">
+    <p>{{d.type==1?'普通配置（k-v）':'选项配置（k-map）'}}</p>
+</script>
+
+<script type="text/html" id="valueStr">
+    {{#if(d.type==1){ }}
+    {{#if(d.encrypMode==2){}}
+    ******
+    {{# }else{ }}
+    <a class="layui-btn layui-btn-warm layui-btn-xs" lay-event="info">查看值</a>
+    {{# } }}
+    {{# }else{ }}
+    {{#if(d.valueStr==""){}}
+    <a shiro:hasPermission="dictionary:config" class="layui-btn layui-btn-warm layui-btn-xs" lay-event="cfg">待配置</a>
+    {{# }else{ }}
+    <a shiro:hasPermission="dictionary:config" class="layui-btn layui-btn-xs" lay-event="cfg">配置项</a>
+    {{# } }}
+    {{# } }}
+</script>
+
+<!-- 表格操作列 -->
+<script type="text/html" id="tableBar">
+    <a shiro:hasPermission="dictionary:update" class="layui-btn layui-btn-primary layui-btn-xs" lay-event="edit">修改</a>
+    <a shiro:hasPermission="dictionary:delete" class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+</script>
+
+<!-- 表单弹窗 -->
+<script type="text/html" id="formDialog">
+    <form id="dataForm" lay-filter="dataForm" class="layui-form model-form">
+        <input name="id" type="hidden"/>
+        <div class="layui-form-item">
+            <label class="layui-form-label layui-form-required">字典名称:</label>
+            <div class="layui-input-block">
+                <input name="name" placeholder="请输入名称" class="layui-input"
+                       lay-verType="tips" lay-verify="required" required/>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label layui-form-required">字典类型</label>
+            <div class="layui-input-block">
+                <select name="type" onchange="showView(this.value);">
+                    <option value="1">普通配置（k-v）</option>
+                    <option value="2">选项配置（k-map）</option>
+                </select>
+            </div>
+        </div>
+        <fieldset class="layui-elem-field layui-field-title" style="margin-top: 30px;">
+            <legend>字典配置</legend>
+        </fieldset>
+        <div class="layui-form-item">
+            <label class="layui-form-label layui-form-required">唯一键:
+                <i class="layui-icon layui-icon-tips"
+                   lay-tips="字典键值不允许重复，请与代码中（DictionaryKay.java）的键值严格对应"
+                   lay-direction="1" lay-offset="0,-10px">
+                </i>
+            </label>
+            <div class="layui-input-block">
+                <input name="keyName" placeholder="请输入键" class="layui-input"
+                       lay-verType="tips" lay-verify="required" required/>
+            </div>
+        </div>
+        <div class="layui-form-item kvDiv">
+            <label class="layui-form-label">字典值:
+                <i class="layui-icon layui-icon-tips"
+                   lay-tips="请输入字典值，格式为字符串"
+                   lay-direction="1" lay-offset="0,-10px">
+                </i>
+            </label>
+            <div class="layui-input-block">
+                <input name="valueStr" placeholder="请输入值" class="layui-input" lay-verType="tips"/>
+            </div>
+        </div>
+        <div class="layui-form-item kvDiv">
+            <label class="layui-form-label icon-text">
+                列显示: <i class="layui-icon layui-icon-tips" lay-tips="设置字典值列表页显示模式，防止重要信息的泄漏。"
+                        lay-direction="1" lay-offset="0,-10px"></i>
+            </label>
+            <div class="layui-input-block">
+                <input type="radio" name="encrypMode" value="1" title="明文 " checked/>
+                <input type="radio" name="encrypMode" value="2" title="密文"/>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">字典说明</label>
+            <div class="layui-input-block">
+                <textarea name="remark" placeholder="请输入字典说明"
+                          class="layui-textarea" maxlength="200"></textarea>
+            </div>
+        </div>
+        <div class="layui-form-item text-right">
+            <button class="layui-btn" lay-filter="saveBtn" lay-submit>保存</button>
+            <button class="layui-btn layui-btn-primary" type="button" ew-event="closeDialog">取消</button>
+        </div>
+    </form>
+</script>
+
+<!-- 配置字典项弹窗-1-->
+<script type="text/html" id="cfgDialog">
+    <form id="cfgForm" lay-filter="cfgForm" class="layui-form model-form">
+        <input name="id" type="hidden"/>
+        <div class="layui-form-item">
+            <label class="layui-form-label layui-form-required">字典名称:</label>
+            <div class="layui-input-block">
+                <input name="name" placeholder="请输入名称" class="layui-input"
+                       lay-verType="tips" lay-verify="required" required/>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label layui-form-required">唯一键:
+                <i class="layui-icon layui-icon-tips"
+                   lay-tips="请输入唯一的字典键值"
+                   lay-direction="1" lay-offset="0,-10px">
+                </i>
+            </label>
+            <div class="layui-input-block">
+                <input name="keyName" placeholder="请输入键" class="layui-input"
+                       lay-verType="tips" lay-verify="required" required/>
+            </div>
+        </div>
+        <div class="layui-form-item" style="position: relative;">
+            <label class="layui-form-label">配置选项：</label>
+            <div class="layui-input-block">
+                <table id="formMapTable" lay-filter="formMapTable"></table>
+            </div>
+            <button class="layui-btn layui-btn-sm icon-btn" id="addMapsBtn"
+                    style="position: absolute; left: 20px;top: 60px;padding: 0 5px;" type="button">
+                <i class="layui-icon">&#xe654;</i>新增项
+            </button>
+        </div>
+        <div class="layui-form-item text-right">
+            <button class="layui-btn" lay-filter="saveBtn" lay-submit>保存</button>
+            <button class="layui-btn layui-btn-primary" type="button" ew-event="closeDialog">取消</button>
+        </div>
+    </form>
+</script>
+<!-- 配置字典项弹窗-2 -->
+<script type="text/html" id="mapsDialog">
+    <form id="mapsForm" lay-filter="mapsForm" class="layui-form model-form">
+        <div class="layui-form-item addDiv">
+            <label class="layui-form-label">选项名称：</label>
+            <div class="layui-input-block">
+                <input name="name" placeholder="请输入项目名称" type="text" class="layui-input" maxlength="20"
+                       lay-verType="tips" lay-verify="required"/>
+            </div>
+        </div>
+        <div class="layui-form-item addDiv">
+            <label class="layui-form-label">MAP-KAY：</label>
+            <div class="layui-input-block">
+                <input id="mapKey" name="mapKey" placeholder="请输入MAP-KAY" type="text" class="layui-input" maxlength="50"
+                       lay-verType="tips" lay-verify="required"/>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">MAP-VAL：</label>
+            <div class="layui-input-block">
+                <input name="mapVal" placeholder="请输入MAP-VAL" type="text" class="layui-input"
+                       lay-verType="tips" lay-verify="required"/>
+            </div>
+        </div>
+        <div class="layui-form-item text-right">
+            <button class="layui-btn layui-btn-primary" type="button" ew-event="closeDialog">取消</button>
+            <button class="layui-btn" lay-filter="mapsSubmit" lay-submit>保存</button>
+        </div>
+    </form>
+</script>
+
+<!-- 查看字典值弹窗 -->
+<script type="text/html" id="valueStrDialog">
+    <div class="layui-col-xs12 layui-col-sm6">
+        <div class="layui-card">
+            <div class="layui-card-header">查看字典值<span style="color: #e83d3d;font-size: small">【点击背景任意处即可退出查看】</span></div>
+            <div class="layui-card-body">
+                <div class="layui-form-item">
+                    {{d.valueStr}}
+                </div>
+            </div>
+        </div>
+    </div>
+</script>
+
+<!-- 表格操作列 -->
+<script type="text/html" id="mapsTableBar">
+    <a class="layui-btn layui-btn-primary layui-btn-xs" lay-event="edit">修改</a>
+    <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+</script>
+
+<!-- js部分 -->
+<div th:replace="common/scripts :: common"></div>
+<div th:replace="common/scripts :: jquery"></div>
+<div th:replace="common/scripts :: custom"></div>
+<div>
+    <script>
+        //全局变量 Shiro权限
+        var shiroSave = false;
+        var shiroDelete = false;
+        var shiroUpdate = false;
+        var shiroInfo = false;
+    </script>
+    <!-- 设置Shiro权限变量 -->
+    <shiro:hasAllPermissions name="dictionary:save">
+        <script>shiroSave = true;</script>
+    </shiro:hasAllPermissions>
+    <shiro:hasAllPermissions name="dictionary:delete">
+        <script>shiroDelete = true;</script>
+    </shiro:hasAllPermissions>
+    <shiro:hasAllPermissions name="dictionary:update">
+        <script>shiroUpdate = true;</script>
+    </shiro:hasAllPermissions>
+</div>
+<script th:inline="javascript">
+    layui.use(['layer', 'form', 'table', 'util', 'laydate', 'tableX', 'admin','laytpl'], function () {
+        var $ = layui.jquery;
+        var layer = layui.layer;
+        var form = layui.form;
+        var table = layui.table;
+        var util = layui.util;
+        var laydate = layui.laydate;
+        var tableX = layui.tableX;
+        var admin = layui.admin;
+        var laytpl = layui.laytpl;
+
+        /* 渲染表格 */
+        var cols = [
+            {type: 'checkbox'},
+            {field: 'name', title: '名称', align: 'left'},
+            {field: 'type', title: '类型', templet: '#type', align: 'left'},
+            {field: 'keyName', title: '字典键', align: 'left'},
+            {field: 'valueStr', title: '字典值', templet: '#valueStr', align: 'center',width:100},
+            {
+                field: 'updateTime', title: '更新时间', templet: function (d) {
+                    return util.toDateString(d.updateTime);
+                }, sort: true
+            },
+            {title: '操作', toolbar: '#tableBar', align: 'center', minWidth: 100}
+        ];
+
+        var insTb = table.render({
+            elem: '#dataTable',
+            url: 'dictionary/page',
+            page: true,
+            toolbar: [shiroToolbar(shiroSave, shiroDelete)].join(''),
+            cellMinWidth: 100,
+            cols: [cols],
+            done: function () {
+            }
+        });
+
+        /* 渲染时间选择 */
+        laydate.render({
+            elem: 'input[name="dateRange"]',
+            type: 'date',
+            range: true,
+            trigger: 'click'
+        });
+
+
+        /* 表格工具条点击事件 */
+        table.on('tool(dataTable)', function (obj) {
+            if (obj.event === 'edit') { // 修改
+                showEditModel(obj.data);
+            } else if (obj.event === 'del') { // 删除
+                doDel(obj.data);
+            } else if (obj.event === 'cfg') { // 删除
+                showCfgModel(obj.data);
+            } else if (obj.event === 'info') { // 查看值
+                showInfoModel(obj.data);
+            }
+        });
+
+        /* 表格头工具栏点击事件 */
+        table.on('toolbar(dataTable)', function (obj) {
+            if (obj.event === 'add') { // 添加
+                showEditModel();
+            } else if (obj.event === 'del') { // 删除
+                if ([[${session.session_runtime}]] == 'demo') return layer.msg('演示环境不允许操作，请联系管理员', {icon: 4});
+                var checkRows = table.checkStatus('dataTable');
+                if (checkRows.data.length === 0) {
+                    layer.msg('请选择要删除的数据', {icon: 2});
+                    return;
+                }
+                var ids = checkRows.data.map(function (d) {
+                    return d.id;
+                });
+                doDel({ids: ids});
+            }
+        });
+
+
+        function showCfgModel(mData) {
+            admin.open({
+                type: 1,
+                area: '800px',
+                title: ("配置字典项"),
+                content: $('#cfgDialog').html(),
+                success: function (layero, dIndex) {
+                    form.val('cfgForm', mData);  // 回显数据
+                    showView(mData.type)
+
+                    form.on('submit(saveBtn)', function (data) {
+                        if (mapDataList.length <= 0) {
+                            layer.tips('请添字典选项', '#addMapsBtn', {tips: [1, '#ff4c4c']});
+                            return false;
+                        }
+                        var nList = admin.util.deepClone(mapDataList);
+                        data.field.valueStr = JSON.stringify(nList);
+                        if ([[${session.session_runtime}]] == 'demo') return layer.msg('演示环境不允许操作，请联系管理员', {icon: 4});
+                        $.post('dictionary/update', data.field, function (res) {
+                            if (res.code == 0) {
+                                layer.close(dIndex);
+                                layer.msg(res.msg, {icon: 1});
+                                insTb.reload({page: {curr: 1}});
+                            } else {
+                                layer.msg(res.msg, {icon: 2});
+                            }
+                        }, 'json');
+                        return false;
+                    });
+
+                    var mapDataList = [];
+                    if(mData.valueStr){
+                        try {
+                            mapDataList = eval("("+mData.valueStr+")");
+                        } catch (e) {
+                        }
+                    }
+                    var itemCols = [
+                        {type: 'numbers'},
+                        {field: 'name', title: '选项名称'},
+                        {field: 'mapKey', title: 'MAP-KEY', sort: true},
+                        {field: 'mapVal', title: 'MAP-VAL', sort: true},
+                        {align: 'center', title: '操作', toolbar: '#mapsTableBar', minWidth: 120, width: 120}
+                    ]
+                    var tbOptions = {
+                        elem: '#formMapTable',
+                        data: mapDataList,
+                        page: true,
+                        height: '350px;',
+                        cellMinWidth: 100,
+                        cols: [itemCols],
+                        done: function () {
+                            $(layero).find('.layui-table-view').css('margin', '0');
+                        },
+                        size: ''
+                    };
+                    //渲染表格
+                    var insTbMaps = table.render(tbOptions);
+                    // 工具条点击事件
+                    table.on('tool(formMapTable)', function (obj) {
+                        var data = obj.data;
+                        var layEvent = obj.event;
+                        if (layEvent == 'edit') {
+                            showEditMapsModel(data);
+                        } else if (layEvent == 'del') {
+                            layer.confirm('确定要删除吗？', {
+                                shade: .1,
+                                skin: 'layui-layer-admin'
+                            }, function (i) {
+                                layer.close(i);
+                                for (var j = 0; j < mapDataList.length; j++) {
+                                    delete mapDataList[j].LAY_TABLE_INDEX;
+                                    if (mapDataList[j].mapKey == data.mapKey) {
+                                        mapDataList.splice(j, 1);
+                                    }
+                                }
+                                insTbMaps.reload({data: mapDataList, page: {curr: insTbMaps.config.page.curr}});
+                            });
+                        }
+                    });
+                    $('#addMapsBtn').click(function () {
+                        showEditMapsModel();
+                    });
+
+                    // 显示表单弹窗
+                    function showEditMapsModel(mapsData) {
+                        admin.open({
+                            type: 1,
+                            // offset: '0px',
+                            area: '800px',
+                            title: (mapsData ? '修改' : '添加') + '项目',
+                            content: $('#mapsDialog').html(),
+                            success: function (layero, dIndex) {
+                                $(layero).children('.layui-layer-content').css('overflow', 'visible');
+                                //编辑状态
+                                if(mapsData){
+                                    // 回显数据
+                                    form.val('mapsForm', mapsData);
+                                    $("#mapKey").attr("readOnly","true");
+                                }
+                                // 表单提交事件
+                                form.on('submit(mapsSubmit)', function (data) {
+                                    if (mapsData) {   //修改
+                                        layer.close(dIndex);
+                                        for (var j = 0; j < mapDataList.length; j++) {
+                                            if (mapDataList[j].mapKey == data.field.mapKey) {
+                                                mapDataList[j].mapVal = data.field.mapVal;
+                                                mapDataList[j].name = data.field.name;
+                                            }
+                                            delete mapDataList[j].LAY_TABLE_INDEX;
+                                        }
+                                        layer.close(dIndex);
+
+                                        insTbMaps.reload({data: mapDataList, page: {curr: insTbMaps.config.page.curr}});
+                                    } else {  //添加
+                                        for (var i = 0; i < mapDataList.length; i++) {
+                                            if (mapDataList[i].mapKey == data.field.mapKey) {
+                                                layer.msg('项目已存在', {icon: 2});
+                                                return false;
+                                            }
+                                            delete mapDataList[i].LAY_TABLE_INDEX;
+                                        }
+                                        layer.close(dIndex);
+                                        mapDataList.push(data.field);
+                                        insTbMaps.reload({data: mapDataList, page: {curr: insTbMaps.config.page.curr}});
+                                    }
+                                    return false;
+                                });
+                            }
+                        });
+                    }
+                }
+            });
+        }
+
+        // 显示编辑弹窗
+        function showEditModel(mData) {
+            admin.open({
+                type: 1,
+                area: '800px',
+                title: (mData ? '修改' : '添加'),
+                content: $('#formDialog').html(),
+                success: function (layero, dIndex) {
+                    if(mData){
+                        form.val('dataForm', mData);  // 回显数据
+                        showView(mData.type)
+                    }
+                    form.render();
+                    if ([[${session.session_runtime}]] == 'demo') return layer.msg('演示环境不允许操作，请联系管理员', {icon: 4});
+                    form.on('submit(saveBtn)', function (data) {
+                        $.post(mData ? 'dictionary/update' : 'dictionary/save', data.field, function (res) {
+                            if (res.code == 0) {
+                                layer.close(dIndex);
+                                layer.msg(res.msg, {icon: 1});
+                                insTb.reload({page: {curr: 1}});
+                            } else {
+                                layer.msg(res.msg, {icon: 2});
+                            }
+                        }, 'json');
+                        return false;
+                    });
+                }
+            });
+        }
+
+        // 显示字典值详情弹窗
+        function showInfoModel(mData) {
+            laytpl(valueStrDialog.innerHTML).render(mData, function (html) {
+                admin.open({
+                    type: 1,
+                    area: '800px',
+                    title: false,
+                    shade: true,
+                    shadeClose: true,
+                    closeBtn: false,
+                    offset: '200px',
+                    content: html,
+                    success: function () {
+                    }
+                });
+            })
+        }
+
+        /* 表格搜索 */
+        form.on('submit(searchBtn)', function (data) {
+            if (data.field.dateRange) {
+                var searchDate = data.field.dateRange.split(' - ');
+                data.field.startDate = searchDate[0];
+                data.field.endDate = searchDate[1];
+            } else {
+                data.field.startDate = '';
+                data.field.endDate = '';
+            }
+            data.field.dateRange = undefined;
+            insTb.reload({where: data.field, page: {curr: 1}});
+            return false;
+        });
+
+        /* 导出excel */
+        $('#exportBtn').click(function () {
+            var checkRows = table.checkStatus('dataTable');
+            if (checkRows.data.length === 0) {
+                layer.msg('请选择要导出的数据', {icon: 2});
+            } else {
+                tableX.exportDataX({
+                    cols: insTb.config.cols,
+                    data: checkRows.data,
+                    fileName: '导出数据'
+                });
+            }
+        });
+
+
+        /* 删除 */
+        window.doDel = function (obj) {
+            if ([[${session.session_runtime}]] == 'demo') return layer.msg('演示环境不允许操作，请联系管理员', {icon: 4});
+            layer.confirm('确定要删除选中数据吗？', {
+                skin: 'layui-layer-admin',
+                shade: .1
+            }, function (i) {
+                layer.close(i);
+                var loadIndex = layer.load(2);
+                $.post('dictionary/delete', {
+                    id: obj ? obj.id : '',
+                    ids: obj.ids ? obj.ids.join(',') : ''
+                }, function (res) {
+                    layer.close(loadIndex);
+                    if (res.code === 0) {
+                        layer.msg(res.msg, {icon: 1});
+                        insTb.reload({page: {curr: 1}});
+                    } else {
+                        layer.msg(res.msg, {icon: 2});
+                    }
+                }, 'json');
+            });
+        }
+
+        admin.open({
+            type: 1,
+            content: '<div style="padding: 15px;"><strong style="color: red">郑重提示：</strong>' +
+                '为保证系统稳定运行，系统字典数据非专业技术人员请勿随意删除或修改！</div>',
+            title: false,
+            shade: false,
+            offset: '120px'
+        });
+    });
+
+    function showView(type) {
+        if(type == 1){
+            $(".kvDiv").show();
+            $(".kmapDiv").hide();
+        }else{
+            $(".kvDiv").hide();
+            $(".kmapDiv").show();
+        }
+    }
+</script>
+</body>
+</html>

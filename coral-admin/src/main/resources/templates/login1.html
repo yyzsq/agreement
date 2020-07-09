@@ -1,0 +1,135 @@
+
+<!DOCTYPE html>
+<html lang="zh-cn" class="fullscreen-bg" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="common/links :: common_header(~{::title},~{::link},~{})">
+    <title>请您登录 | 合同管理系统</title>
+    <link th:href="@{/assets/css/login.css}" rel="stylesheet">
+    <script>
+        if (window != top) {
+            top.location.replace(location.href);
+        }
+    </script>
+</head>
+<body>
+<div class="login-wrapper">
+    <div class="login-header">
+        <img th:src="@{/coral/images/logo.png}">
+        合同管理系统
+    </div>
+    <div class="login-body">
+        <div class="layui-card">
+            <div class="layui-card-header">
+                <i class="layui-icon layui-icon-group"></i>&nbsp;&nbsp;用户登录
+            </div>
+            <form class="layui-card-body layui-form layui-form-pane">
+                <div class="layui-form-item">
+                    <label class="layui-form-label"><i class="layui-icon layui-icon-username"></i></label>
+                    <div class="layui-input-block">
+                        <input name="username" type="text" placeholder="账号" class="layui-input"
+                               lay-verType="tips" lay-verify="required" required value="admin"/>
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label"><i class="layui-icon layui-icon-password"></i></label>
+                    <div class="layui-input-block">
+                        <input name="password" type="password" placeholder="密码" class="layui-input"
+                               lay-verType="tips" lay-verify="required" required value="123456"/>
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label"><i class="layui-icon layui-icon-vercode"></i></label>
+                    <div class="layui-input-block">
+                        <div class="layui-row inline-block">
+                            <div class="layui-col-xs7">
+                                <input name="validCode" type="text" placeholder="验证码" class="layui-input"
+                                       autocomplete="off" lay-verType="tips" lay-verify="required" required/>
+                            </div>
+                            <div class="layui-col-xs5" style="padding-left: 6px;">
+                                <img class="login-captcha" src="kaptcha/code">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <a href="javascript:;" class="layui-link">帐号注册</a>
+                    <a href="javascript:;" class="layui-link pull-right">忘记密码？</a>
+                </div>
+                <div class="layui-form-item">
+                    <button lay-filter="login-submit" class="layui-btn layui-btn-fluid" lay-submit>登 录</button>
+                </div>
+                <div class="layui-form-item login-other">
+                    <label>第三方登录</label>
+                    <a href="javascript:;"><i class="layui-icon layui-icon-login-qq"></i></a>
+                    <a href="javascript:;"><i class="layui-icon layui-icon-login-wechat"></i></a>
+                    <a href="javascript:;"><i class="layui-icon layui-icon-login-weibo"></i></a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="login-footer">
+        <p>Copyright © [[${#dates.format(new java.util.Date().getTime(), 'yyyy')}]] gemframework.com 版权所有</p>
+        <p>
+            <span><a href="http://www.gemframework.com" target="_blank">项目官网</a></span>
+            <span><a href="http://www.gemframework.com/bbs" target="_blank">社区交流</a></span>
+            <span><a href="https://gitee.com/gemteam" target="_blank">源码获取</a></span>
+        </p>
+    </div>
+</div>
+
+<!-- js部分 -->
+<div th:replace="common/scripts :: common"></div>
+<script>
+    layui.use(['layer', 'form','notice'], function () {
+        var $ = layui.jquery;
+        var layer = layui.layer;
+        var form = layui.form;
+        var notice = layui.notice;
+
+        // 表单提交
+        form.on('submit(login-submit)', function (obj) {
+            $.ajax({
+                type: "post",
+                url: "login",
+                data: obj.field,
+                async:true, // 异步请求
+                cache:false, // 设置为 false 将不缓存此页面
+                dataType: "json", // 返回对象
+                // contentType:"application/json;charset=UTF-8",
+                success: function(res) {
+                    if (res.code == "0") {
+                        layer.msg('登录成功', {icon: 1, time: 1500}, function () {
+                            location.replace('index')
+                        });
+                    }else {
+                        notice.error({
+                            title: '登录失败',
+                            message: "错误码：["+res.code+"] 错误消息["+res.msg+"]",
+                            theme: "light",
+                            displayMode: 2,
+                            layout:2
+                        });
+                        // notice.msg("错误码：["+res.code+"] 错误消息["+res.msg+"]", {
+                        //     icon: 2,
+                        //     displayMode: 2,
+                        //     layout:2
+                        // });
+                    }
+                },
+                error: function(e) {
+                    // 请求失败函数
+                    console.log("error:"+JSON.stringify(e));
+                    layer.msg("操作失败，请检查是否有相关操作权限！");
+                }
+            })
+            return false;
+        });
+
+        // 图形验证码
+        $('.login-captcha').click(function () {
+            this.src = this.src + '?t=' + (new Date).getTime();
+        });
+    });
+</script>
+</body>
+</html>

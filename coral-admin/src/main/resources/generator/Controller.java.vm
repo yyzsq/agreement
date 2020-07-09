@@ -1,0 +1,138 @@
+
+package ${package}.controller.extend.${moduleName};
+
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+
+import com.gemframework.annotation.Log;
+import com.gemframework.common.utils.GemBeanUtils;
+import com.gemframework.constant.GemModules;
+import com.gemframework.controller.prekit.BaseController;
+import com.gemframework.model.common.BaseResultData;
+import com.gemframework.model.common.PageInfo;
+import com.gemframework.model.common.validator.SaveValidator;
+import com.gemframework.model.common.validator.UpdateValidator;
+import com.gemframework.model.enums.ErrorCode;
+import com.gemframework.model.enums.OperateType;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.shiro.authz.annotation.RequiresPermissions;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+import ${package}.model.entity.po.${className};
+import ${package}.model.entity.vo.${className}Vo;
+import ${package}.service.${className}Service;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
+/**
+ * @Title: ${className}Controller
+ * @Date: ${datetime}
+ * @Version: v1.0
+ * @Description: ${comments}控制器
+ * @Author: ${author}
+ * @Email: ${email}
+ * @Copyright: Copyright (c) 2020 wanyong
+ * @Company: www.gemframework.com
+ */
+@Slf4j
+@RestController
+@RequestMapping(GemModules.Extend.PATH_PRE+"/${moduleName}/${classname}")
+public class ${className}Controller extends BaseController {
+
+    private static final String moduleName = "${comments}";
+
+    @Autowired
+    private ${className}Service ${classname}Service;
+
+    /**
+     * 获取列表分页
+     * @return
+     */
+    @GetMapping("/page")
+    @RequiresPermissions("${classname}:page")
+    public BaseResultData page(PageInfo pageInfo, ${className}Vo vo) {
+        QueryWrapper queryWrapper = makeQueryMaps(vo);
+        Page page = ${classname}Service.page(setOrderPage(pageInfo),queryWrapper);
+        return BaseResultData.SUCCESS(page.getRecords(),page.getTotal());
+    }
+    /**
+     * 获取列表
+     * @return
+     */
+    @GetMapping("/list")
+    @RequiresPermissions("${classname}:list")
+    public BaseResultData list(${className}Vo vo) {
+        QueryWrapper queryWrapper = makeQueryMaps(vo);
+        List list = ${classname}Service.list(queryWrapper);
+        return BaseResultData.SUCCESS(list);
+    }
+
+    /**
+     * 添加
+     * @return
+     */
+    @Log(type = OperateType.ALTER,value = "保存"+moduleName)
+    @PostMapping("/save")
+    @RequiresPermissions("${classname}:save")
+    public BaseResultData save(@RequestBody ${className}Vo vo) {
+        GemValidate(vo, SaveValidator.class);
+        ${className} entity = GemBeanUtils.copyProperties(vo, ${className}.class);
+        if(!${classname}Service.save(entity)){
+            return BaseResultData.ERROR(ErrorCode.SAVE_OR_UPDATE_FAIL);
+        }
+        return BaseResultData.SUCCESS(entity);
+    }
+
+
+    /**
+     * 删除 & 批量刪除
+     * @return
+     */
+    @Log(type = OperateType.ALTER,value = "删除"+moduleName)
+    @PostMapping("/delete")
+    @RequiresPermissions("${classname}:delete")
+    public BaseResultData delete(Long id,String ids) {
+        if(id!=null) ${classname}Service.removeById(id);
+        if(StringUtils.isNotBlank(ids)){
+            List<Long> listIds = Arrays.asList(ids.split(",")).stream().map(s ->Long.parseLong(s.trim())).collect(Collectors.toList());
+            if(listIds!=null && !listIds.isEmpty()){
+                    ${classname}Service.removeByIds(listIds);
+            }
+        }
+        return BaseResultData.SUCCESS();
+    }
+
+
+    /**
+     * 编辑
+     * @return
+     */
+    @Log(type = OperateType.ALTER,value = "编辑"+moduleName)
+    @PostMapping("/update")
+    @RequiresPermissions("${classname}:update")
+    public BaseResultData update(@RequestBody ${className}Vo vo) {
+        GemValidate(vo, UpdateValidator.class);
+        ${className} entity = GemBeanUtils.copyProperties(vo, ${className}.class);
+        if(!${classname}Service.updateById(entity)){
+            return BaseResultData.ERROR(ErrorCode.SAVE_OR_UPDATE_FAIL);
+        }
+        return BaseResultData.SUCCESS(entity);
+    }
+
+
+    /**
+     * 获取用户信息ById
+     * @return
+     */
+    @Log(type = OperateType.NORMAL,value = "查看"+moduleName)
+    @GetMapping("/info")
+    @RequiresPermissions("${classname}:info")
+    public BaseResultData info(Long id) {
+        ${className} info = ${classname}Service.getById(id);
+        return BaseResultData.SUCCESS(info);
+    }
+
+}
