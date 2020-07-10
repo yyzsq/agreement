@@ -134,7 +134,7 @@ public class JieSuanController extends BaseController {
         User user1=userService.getById(entity.getShenheId());
         entity.setShenheName(user1.getRealname());
         SimpleDateFormat sf=new SimpleDateFormat("yyyy年MM月dd日");
-        String time=sf.format(entity.getCreateTime());
+        String time=sf.format(entity.getUpdateTime());
         entity.setCreateTimeStr(time);
         return BaseResultData.SUCCESS(entity);
     }

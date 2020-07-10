@@ -222,21 +222,21 @@
                                 cwzkFlag=true;
                                 $("[name='fz']").text(obj.liabilities);
                             }
-                            if(obj.liabilities==null||obj.liabilities==""){
+                            if(obj.corporationLiabilities==null||obj.corporationLiabilities==""){
                                 $("[name='frfz']").parents("tr").remove();
                             }else {
                                 cwzkFlag=true;
-                                $("[name='frfz']").text(obj.liabilities);
+                                $("[name='frfz']").text(obj.corporationLiabilities);
                             }
                             if(!cwzkFlag){
                                 $("#cwzk").remove();
 							}
                             //商品存货
-                            if(obj.liabilities==null||obj.liabilities==""){
+                            if(obj.shangpch==null||obj.shangpch==""){
                                 $("[name='ch']").parents("tr").remove();
                             }else {
                                 cwzkFlag=true;
-                                $("[name='ch']").text(obj.liabilities);
+                                $("[name='ch']").text(obj.shangpch);
                             }
                             var jyzkFlag=false;
                             if(obj.businessIncome==null||obj.businessIncome==""){
